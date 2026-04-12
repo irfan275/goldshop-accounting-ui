@@ -1,0 +1,224 @@
+.invoice{
+    width:148mm;
+    margin:auto;
+    font-family:Arial;
+    font-size:12px;
+    }
+    
+    .header{
+    display:flex;
+    justify-content:space-between;
+    }
+    
+    .logo-block{
+    background:black;
+    color:white;
+    font-size:30px;
+    font-weight:bold;
+    padding:20px;
+    text-align:center;
+    }
+    
+    .company-block{
+    text-align:right;
+    }
+    
+    .subtitle{
+    text-align:center;
+    margin-top:5px;
+    }
+    
+    .title{
+    text-align:center;
+    font-weight:bold;
+    margin:10px 0;
+    }
+    
+    .info-section{
+    display:flex;
+    gap:10px;
+    }
+    
+    .customer-box,
+    .invoice-box{
+    width:50%;
+    border-collapse:collapse;
+    }
+    
+    .customer-box td,
+    .invoice-box td{
+    border:1px solid black;
+    padding:4px;
+    }
+    
+    .items{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    }
+    
+    .items th,
+    .items td{
+    border:1px solid black;
+    padding:4px;
+    text-align:center;
+    }
+    
+    .due{
+    font-weight:bold;
+    }
+    
+    .notes{
+    margin-top:8px;
+    border-collapse:collapse;
+    }
+    
+    .notes td{
+    border:1px solid black;
+    padding:4px;
+    }
+    
+    .remarks{
+    margin-top:10px;
+    font-size:11px;
+    }
+    
+    .signatures{
+    display:flex;
+    justify-content:space-between;
+    margin-top:40px;
+    font-weight:bold;
+    }
+    button:disabled {
+    cursor: not-allowed;
+  }
+  /* Back page layout (for screen + print) */
+.back-page {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Grid layout */
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 2 per row */
+/* Image container */
+.image-box {
+  width: 50%;           /* 2 per row */
+  height: 200px;        /* fixed height for uniformity */
+  padding: 2;           /* remove extra spacing */
+  box-sizing: border-box;
+  border: 1px solid #000;
+}
+
+/* Image itself */
+.image-box img {
+  width: 100%;
+  height: 100%;         /* fill container height */
+  object-fit: contain;   /* preserve aspect ratio, no cropping */
+  display: block;        /* removes extra inline spacing */
+}
+/* Hide in screen */
+.print-only {
+  display: none;
+}
+.image-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.image-preview-box img {
+  width: 100px;
+  height: 200mm;        /* automatic height */
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+.file-tag {
+  display: inline-flex;
+  align-items: center;
+  background: #e5e7eb; /* light gray */
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.file-name {
+  margin-right: 6px;
+}
+
+.remove-btn {
+  cursor: pointer;
+  font-weight: bold;
+  color: #555;
+}
+
+.remove-btn:hover {
+  color: red;
+}
+.file-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 148mm;
+    height: auto;  
+    overflow: visible
+  }
+
+  .invoice-copy {
+  width: 100%;
+  margin-bottom: 10px;
+  page-break-after: auto;
+  page-break-inside: avoid;
+  }
+
+  .invoice-copy:last-child {
+    page-break-after: auto;
+  }
+.invoice-copy.single-copy {
+  margin-bottom: 0 !important;       /* remove extra margin */
+  page-break-after: auto !important; /* no forced break */
+  page-break-inside: avoid !important;
+}
+.invoice-copy:not(.single-copy) {
+  margin-bottom: 10px;
+  page-break-after: always;       /* force new page between copies */
+  page-break-inside: avoid;
+}
+  @page {
+    size: A5;
+    margin: 5mm;
+  }
+
+  
+.back-page {
+    page-break-before: always;   /* 🔥 start on new page */
+    page-break-after: always;    /* 🔥 end page */
+    break-before: page;          /* modern browsers */
+    break-after: page;
+    width: 100%;
+  }
+    .print-only {
+    display: block !important;
+  }
+}
