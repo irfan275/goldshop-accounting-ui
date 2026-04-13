@@ -8,9 +8,9 @@ const API_URL = "ledger";
 //     params: { page, size, invoiceNumber,customerId }
 //   });
 // };
-export const getLedger = (page, limit, invoiceNumber, customerId) => {
+export const getLedger = (invoiceNumber, customerId, fromdate, todate) => {
   return api.get(API_URL, {
-    params: { page, limit, invoiceNumber, customerId }
+    params: { invoiceNumber, customerId, fromdate, todate }
   });
 };
 // GET customer by id

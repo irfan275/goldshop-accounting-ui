@@ -3,96 +3,89 @@ import { useNavigate } from "react-router-dom";
 import { deleteLedger, getLedger } from "../services/ledgerService";
 import Pagination from "./Pagination";
 import { getCustomers } from "../services/customerService";
-import { format } from "date-fns"; // optional, makes date formatting easier
-
-
+import { format, subDays } from "date-fns";
 
 function Ledgers() {
-  const today = format(new Date(), "dd-MMM-yyyy"); // e.g., "05-Apr-2026"
-  const navigate=useNavigate();
+  const navigate = useNavigate();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const today = new Date();
+  const defaultFrom = subDays(today, 7);
+
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const [size] = useState(20);
   const [totalPages, setTotalPages] = useState(0);
+
+  const [fromDate, setFromDate] = useState(defaultFrom);
+  const [toDate, setToDate] = useState(today);
+
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerResults, setCustomerResults] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user"));
 
   const [ledgers, setLedgers] = useState([]);
+
+  // ---------------- LOAD LEDGERS ----------------
   useEffect(() => {
-    loadInvoices();
+    loadLedgers(1);
   }, []);
 
-const loadInvoices = async (pageNumber = 1) => {
+  const loadLedgers = async (pageNumber = 1) => {
+    let invoiceNo = "";
+    let custId = "";
 
-  let invoiceNo = "";
-  let custId = "";
+    if (searchText) {
+      invoiceNo = searchText;
+    } else if (selectedCustomer) {
+      custId = selectedCustomer._id;
+    }
 
-  // 🔥 Priority logic
-  if (searchText) {
-    invoiceNo = searchText;
-  } else if (selectedCustomer) {
-    custId = selectedCustomer._id;
-  }
+    const response = await getLedger(
+      invoiceNo,
+      custId,
+      fromDate,
+      toDate
+    );
 
-  const response = await getLedger(
-    pageNumber,
-    size,
-    invoiceNo,
-    custId
-  );
+    setLedgers(response.data.data || []);
+    setTotalPages(response.data.totalPages || 0);
+    setPage(pageNumber);
+  };
 
-  setLedgers(response.data.data || []);
-  setTotalPages(response.data.totalPages || 0);
-  setPage(pageNumber);
-};
+  // ---------------- DELETE ----------------
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure to delete this invoice?")) {
+    if (window.confirm("Are you sure to delete this ledger entry?")) {
       try {
-        // Call API to delete
-        await deleteLedger(id); // replace with your API function
-    
-        // Update local state to remove deleted record
-        setLedgers((prev) => prev.filter((inv) => inv._id !== id));
-    
-        // Show success alert
-        alert("Invoice deleted successfully!");
-      } catch (error) {
-        console.error("Delete failed:", error);
-        alert("Failed to delete Invoice.");
+        await deleteLedger(id);
+        setLedgers((prev) => prev.filter((l) => l._id !== id));
+        alert("Deleted successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Delete failed");
       }
     }
   };
+
+  // ---------------- SEARCH ----------------
   const handleSearch = () => {
-
-    loadInvoices(1, searchText);
+    loadLedgers(1);
   };
-  const handlePageChange = (pageNumber) => {
-   setPage(pageNumber); 
-  loadInvoices(pageNumber, searchText);
-};
-const handleCustomerSelection = async (c) => {
-  try {
-    //const res = await checkCardExpiry(c._id);
 
-    // success (200)
+  const handlePageChange = (pageNumber) => {
+    loadLedgers(pageNumber);
+  };
+
+  // ---------------- CUSTOMER SELECT ----------------
+  const handleCustomerSelection = (c) => {
     setSelectedCustomer(c);
     setCustomerSearch(c.name);
     setCustomerResults([]);
+  };
 
-  } catch (err) {
-    if (err.response) {
-      // backend returned 400
-      alert(err.response.data.message || "Invalid card expiry");
-    } else {
-      alert("Something went wrong");
-    }
-  }
-};
-  // ------------------ CUSTOMER SEARCH ------------------
+  // ---------------- CUSTOMER SEARCH ----------------
   useEffect(() => {
-
     if (customerSearch.length < 3 || selectedCustomer) {
       setCustomerResults([]);
       return;
@@ -104,107 +97,116 @@ const handleCustomerSelection = async (c) => {
     }, 400);
 
     return () => clearTimeout(timer);
-
   }, [customerSearch, selectedCustomer]);
-const formatDate = (date) => {
-  return new Date(date).toLocaleString();
-};
+
+  // ---------------- FORMAT HELPERS ----------------
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString();
+  };
+
   return (
-    <div>
+    <div className="container mt-3">
 
-      <div className="mb-3">
+      {/* HEADER */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h3>Ledgers</h3>
 
-  {/* Top Row */}
-  <div className="d-flex justify-content-between align-items-center mb-2">
-    <h3 className="m-0">Invoices</h3>
-
-    <button
-      className="btn btn-primary"
-      onClick={() => navigate("/ledgers/add")}
-    >
-      Add Entry
-    </button>
-  </div>
-
-  {/* Filters Row */}
-  <div className="row g-2 align-items-end">
-
-    {/* Customer Search */}
-    <div className="col-md-4 position-relative">
-      <label className="form-label mb-1"><strong>Customer</strong></label>
-
-      <input
-        className="form-control"
-        placeholder="Search Customer"
-        value={customerSearch}
-        onChange={(e) => setCustomerSearch(e.target.value)}
-        disabled={searchText} // 🔥 disable if invoice search used
-      />
-
-      {customerResults.length > 0 && (
-        <ul
-          className="list-group position-absolute w-100 shadow"
-          style={{ zIndex: 1000, maxHeight: "200px", overflowY: "auto" }}
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/ledgers/add")}
         >
-          {customerResults.map((c) => (
-            <li
-              key={c._id}
-              className="list-group-item list-group-item-action"
-              onClick={() => handleCustomerSelection(c)}
-              style={{ cursor: "pointer" }}
-            >
-              {c.name } - {c.civilId}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+          Add Entry
+        </button>
+      </div>
 
-    {/* Invoice Search */}
-    <div className="col-md-3">
-      <label className="form-label mb-1"><strong>Invoice No</strong></label>
-      <input
-        type="text"
-        className="form-control"
-        placeholder="Enter Invoice No"
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-      />
-    </div>
+      {/* FILTERS */}
+      <div className="row g-2 mb-3">
 
-    {/* Search Button */}
-    <div className="col-md-2">
-      <button
-        className="btn btn-success w-100"
-        onClick={handleSearch}
-      >
-        Search
-      </button>
-    </div>
+        {/* CUSTOMER */}
+        <div className="col-md-3 position-relative">
+          <input
+            className="form-control"
+            placeholder="Search Customer"
+            value={customerSearch}
+            onChange={(e) => setCustomerSearch(e.target.value)}
+            disabled={searchText}
+          />
 
-    {/* Reset Button */}
-    <div className="col-md-2">
-      <button
-        className="btn btn-secondary w-100"
-        onClick={() => {
-          setSearchText("");
-          setCustomerSearch("");
-          setCustomerResults([]);
-          setSelectedCustomer(null);
-          handleSearch();
-        }}
-      >
-        Reset
-      </button>
-    </div>
+          {customerResults.length > 0 && (
+            <ul className="list-group position-absolute w-100 shadow">
+              {customerResults.map((c) => (
+                <li
+                  key={c._id}
+                  className="list-group-item list-group-item-action"
+                  onClick={() => handleCustomerSelection(c)}
+                >
+                  {c.name} - {c.civilId}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-  </div>
-</div>
+        {/* SEARCH */}
+        <div className="col-md-3">
+          <input
+            className="form-control"
+            placeholder="Ledger No / Ref"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </div>
 
+        {/* FROM DATE */}
+        <div className="col-md-2">
+          <input
+            type="date"
+            className="form-control"
+            value={format(fromDate, "yyyy-MM-dd")}
+            onChange={(e) => setFromDate(new Date(e.target.value))}
+          />
+        </div>
+
+        {/* TO DATE */}
+        <div className="col-md-2">
+          <input
+            type="date"
+            className="form-control"
+            value={format(toDate, "yyyy-MM-dd")}
+            onChange={(e) => setToDate(new Date(e.target.value))}
+          />
+        </div>
+
+        {/* SEARCH BTN */}
+        <div className="col-md-1">
+          <button className="btn btn-success w-100" onClick={handleSearch}>
+            Go
+          </button>
+        </div>
+
+        {/* RESET */}
+        <div className="col-md-1">
+          <button
+            className="btn btn-secondary w-100"
+            onClick={() => {
+              setSearchText("");
+              setCustomerSearch("");
+              setSelectedCustomer(null);
+              setFromDate(defaultFrom);
+              setToDate(today);
+              loadLedgers(1);
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {/* TABLE */}
       <div className="card shadow">
         <div className="card-body table-responsive">
 
-          <table className="table table-bordered table-hover align-middle text-center">
+          <table className="table table-bordered table-hover text-center">
 
             <thead className="table-dark">
               <tr>
@@ -212,7 +214,7 @@ const formatDate = (date) => {
                 <th>Customer</th>
                 <th>Description</th>
                 <th>Cash</th>
-                <th>Gold (g)</th>
+                <th>Gold</th>
                 <th>TTB</th>
                 <th>Bank</th>
                 <th>Action</th>
@@ -220,87 +222,73 @@ const formatDate = (date) => {
             </thead>
 
             <tbody>
-
               {ledgers.map((item) => {
 
                 const getEntry = (type) =>
-                  item.entries.find((e) => e.type === type) || {};
-
-                const cash = getEntry("cash");
-                const gold = getEntry("gold_raw");
-                const ttb = getEntry("gold_bar");
-                const bank = getEntry("bank");
+                  item.entries?.find((e) => e.type === type) || {};
 
                 return (
                   <tr key={item._id}>
 
-                    {/* DATE */}
-                    <td>
-                      {new Date(item.date).toLocaleDateString()}
-                    </td>
+                    <td>{formatDate(item.createdAt || item.date)}</td>
 
-                    {/* CUSTOMER */}
-                    <td className="fw-bold">
-                      {item.name}
-                    </td>
+                    <td className="fw-bold">{item.customer?.name || item.name}</td>
 
-                    {/* DESCRIPTION */}
                     <td>{item.description}</td>
 
-                    {/* CASH */}
                     <td>
-                      <span className="text-success">C:{cash.credit || 0}</span>
-                      <br />
-                      <span className="text-danger">D:{cash.debit || 0}</span>
+                      C:{item.cash.credit || 0}<br />
+                      D:{item.cash.debit || 0}
                     </td>
 
-                    {/* GOLD GRAMS */}
                     <td>
-                      <span className="text-success">C:{gold.credit || 0}</span>
-                      <br />
-                      <span className="text-danger">D:{gold.debit || 0}</span>
+                      C:{item.gold.credit || 0}<br />
+                      D:{item.gold.debit || 0}
                     </td>
 
-                    {/* TTB */}
                     <td>
-                      <span className="text-success">C:{ttb.credit || 0}</span>
-                      <br />
-                      <span className="text-danger">D:{ttb.debit || 0}</span>
+                      C:{item.ttb.credit || 0}<br />
+                      D:{item.ttb.debit || 0}
                     </td>
 
-                    {/* BANK */}
                     <td>
-                      <span className="text-success">C:{bank.credit || 0}</span>
-                      <br />
-                      <span className="text-danger">D:{bank.debit || 0}</span>
+                      C:{item.bank.credit || 0}<br />
+                      D:{item.bank.debit || 0}
                     </td>
 
-                    {/* ACTIONS */}
                     <td>
                       <button
                         className="btn btn-sm btn-primary me-2"
-                        onClick={() => window.location.href = `/ledger/edit/${item._id}`}
+                        onClick={() => navigate(`/ledgers/edit/${item._id}`)}
                       >
                         Edit
                       </button>
 
                       <button
-                        className="btn btn-sm btn-info"
-                        onClick={() => alert(JSON.stringify(item, null, 2))}
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDelete(item._id)}
                       >
-                        View
+                        Delete
                       </button>
                     </td>
 
                   </tr>
                 );
               })}
-
             </tbody>
+
           </table>
+
         </div>
       </div>
-      <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+
+      {/* PAGINATION */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+
     </div>
   );
 }
