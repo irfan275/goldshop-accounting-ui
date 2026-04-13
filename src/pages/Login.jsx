@@ -32,7 +32,7 @@ function Login() {
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
         // redirect
-        navigate("/invoices");
+        navigate("/ledgers");
 
       } else {
         alert(data.message);

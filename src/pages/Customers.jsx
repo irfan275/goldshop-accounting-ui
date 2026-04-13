@@ -15,10 +15,8 @@ function Customers() {
   const [form, setForm] = useState({
     name: "",
     phone: "",
-    civilId: "",
-    address: "",
+    description: "",
     type: "Resident",
-    cardExpiry: ""
   });
 
 useEffect(() => {
@@ -44,7 +42,7 @@ const handleSearch = () => {
   loadCustomers(1, searchText);
 };
   const openAddModal = () => {
-    setForm({ name:"", phone:"", civilId:"", address:"",type:"Resident",cardExpiry:"" });
+    setForm({ name:"", phone:"", description:"",type:"Resident" });
     setEditId(null);
     setShowModal(true);
   };
@@ -68,15 +66,11 @@ const handleSearch = () => {
   const formElement = e.currentTarget;
 
   if (!formElement.checkValidity()) {
-    e.stopPropagation();
-  } else {
-    if (!validateDate(form.cardExpiry)) {
-        alert("Date must be in format dd/mm/yyyy");
-        return;
-      }
+      e.stopPropagation();
+    } else {
       let data = {}
       if(editId){
-       data =  await updateCustomer(editId, form);
+        data =  await updateCustomer(editId, form);
       }else{
         data =await createCustomer(form);
       }
@@ -86,18 +80,8 @@ const handleSearch = () => {
         setShowModal(false);
         loadCustomers();
       }
-
     }
     formElement.classList.add("was-validated");
-  };
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    if (files && files[0]) {
-      setForm((prev) => ({
-        ...prev,
-        [name]: files[0]  // store File object
-      }));
-    }
   };
 const handleDelete = async (id) => {
   if (window.confirm("Are you sure to delete this customer?")) {
@@ -171,9 +155,7 @@ const handlePageChange = (pageNumber) => {
           <tr>
             <th>Name</th>
             <th>Phone</th>
-            <th>CR/ID No</th>
-            <th>Nationality</th>
-            <th>Card Expiry</th>
+            <th>Description</th>
             <th>Customer Type</th>
             <th>Action</th>
           </tr>
@@ -185,9 +167,7 @@ const handlePageChange = (pageNumber) => {
             <tr key={c._id}>
               <td>{c.name}</td>
               <td>{c.phone}</td>
-              <td>{c.civilId}</td>
-              <td>{c.address}</td>
-              <td>{c.cardExpiry}</td>
+              <td>{c.description}</td>
               <td>{c.type}</td>
               <td>
                 <button
@@ -254,39 +234,12 @@ const handlePageChange = (pageNumber) => {
                 </div>
 
                 <div className="row mb-2">
-                  <div className="col-3"><label className="form-label">CR/ID No</label></div>
+                  <div className="col-3"><label className="form-label">Description</label></div>
                   <div className="col-9">
                     <input
                       className="form-control"
-                      name="civilId"
-                      value={form.civilId}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-3"><label className="form-label">Card Expiry</label></div>
-                  <div className="col-9">
-                    <input
-                        type="text"
-                        className="form-control"
-                        name="cardExpiry"
-                        placeholder="dd/mm/yyyy"
-                        value={form.cardExpiry}
-                        onChange={handleChange}
-                        required
-                      />
-                  </div>
-                </div>
-
-                <div className="row mb-2">
-                  <div className="col-3"><label className="form-label">Nationality</label></div>
-                  <div className="col-9">
-                    <input
-                      className="form-control"
-                      name="address"
-                      value={form.address}
+                      name="description"
+                      value={form.description}
                       onChange={handleChange}
                     />
                   </div>
@@ -311,29 +264,6 @@ const handlePageChange = (pageNumber) => {
                     </select>
                   </div>
                 </div>
-                {/* <div className="row mb-2">
-                  <div className="col-3"><label className="form-label">Card Front</label></div>
-                  <div className="col-9">
-                    <input
-                      type="file"
-                      className="form-control"
-                      name="cardFront"
-                      // onChange={handleFileChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="row mb-2">
-                  <div className="col-3"><label className="form-label">Card Back</label></div>
-                  <div className="col-9">
-                    <input
-                      type="file"
-                      className="form-control"
-                      name="cardBack"
-                      // onChange={handleFileChange}
-                    />
-                  </div>
-                </div> */}
 
               </div>
 
