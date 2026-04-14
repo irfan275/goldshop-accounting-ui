@@ -4,6 +4,8 @@ import { deleteLedger, getLedger } from "../services/ledgerService";
 import Pagination from "./Pagination";
 import { getCustomers } from "../services/customerService";
 import { format, subDays } from "date-fns";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function Ledgers() {
   const navigate = useNavigate();
@@ -159,21 +161,23 @@ function Ledgers() {
 
         {/* FROM DATE */}
         <div className="col-md-2">
-          <input
-            type="date"
+           <DatePicker
+            selected={fromDate}
+            onChange={(date) => setToDate(date)}
             className="form-control"
-            value={format(fromDate, "yyyy-MM-dd")}
-            onChange={(e) => setFromDate(new Date(e.target.value))}
+            dateFormat="dd-MMM-yyyy"
+            placeholderText="Select To Date"
           />
         </div>
 
         {/* TO DATE */}
         <div className="col-md-2">
-          <input
-            type="date"
+           <DatePicker
+            selected={toDate}
+            onChange={(date) => setToDate(date)}
             className="form-control"
-            value={format(toDate, "yyyy-MM-dd")}
-            onChange={(e) => setToDate(new Date(e.target.value))}
+            dateFormat="dd-MMM-yyyy"
+            placeholderText="Select To Date"
           />
         </div>
 
@@ -228,7 +232,7 @@ function Ledgers() {
                   item.entries?.find((e) => e.type === type) || {};
 
                 return (
-                  <tr key={item._id}>
+                  <tr key={item._id} style={{ fontWeight:  item.isTotal ? 'bold' : 'normal' }}>
 
                     <td>{formatDate(item.createdAt || item.date)}</td>
 
@@ -257,19 +261,19 @@ function Ledgers() {
                     </td>
 
                     <td>
-                      <button
+                      {!item.isTotal && (<button
                         className="btn btn-sm btn-primary me-2"
                         onClick={() => navigate(`/ledgers/edit/${item._id}`)}
                       >
                         Edit
-                      </button>
+                      </button>)}
 
-                      <button
+                      {!item.isTotal && (<button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDelete(item._id)}
                       >
                         Delete
-                      </button>
+                      </button>)}
                     </td>
 
                   </tr>

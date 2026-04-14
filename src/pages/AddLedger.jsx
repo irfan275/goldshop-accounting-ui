@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { createLedger, getLedgerById, updateLedger } from "../services/ledgerService";
 import { getCustomers } from "../services/customerService";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function AddLedger() {
   const { id } = useParams();
@@ -150,12 +152,21 @@ export default function AddLedger() {
       <div className="row mb-3">
         <div className="col-md-3">
           <label className="form-label">Date</label>
-          <input
-            type="date"
-            className="form-control"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-          />
+          <div className="w-100">
+            <DatePicker
+              selected={form.date ? new Date(form.date) : null}
+              onChange={(date) =>
+                setForm({
+                  ...form,
+                  date: date ? date.toLocaleDateString("en-CA") : null
+                })
+              }
+              className="form-control w-100"
+              wrapperClassName="w-100"
+              dateFormat="dd-MMM-yyyy"
+              placeholderText="Select Date"
+            />
+          </div>
         </div>
 
         <div className="col-md-5 position-relative">
