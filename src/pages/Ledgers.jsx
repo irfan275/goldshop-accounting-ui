@@ -47,8 +47,8 @@ function Ledgers() {
     const response = await getLedger(
       invoiceNo,
       custId,
-      fromDate,
-      toDate
+      fromDate.toLocaleDateString("en-CA"),
+      toDate.toLocaleDateString("en-CA")
     );
 
     setLedgers(response.data.data || []);
