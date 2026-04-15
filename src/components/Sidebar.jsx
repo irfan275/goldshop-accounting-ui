@@ -35,7 +35,7 @@ function Sidebar() {
             Ledger
           </NavLink>
         </li>
-        <li>
+        {/* <li>
           <NavLink
             to="/goldreceive"
             className={({ isActive }) =>
@@ -45,7 +45,7 @@ function Sidebar() {
             <FaFileInvoice className="menu-icon" />
             Gold Receive
           </NavLink>
-        </li>
+        </li> */}
 
           {user?.role !== "EMPLOYEE" && (
         <li>

@@ -20,7 +20,7 @@ const [name,setName] = useState("")
   return (
  <nav className="navbar navbar-light bg-success px-3">
 
-  <strong className="navbar-info">Muscat Bullion Ledger</strong>
+  <strong className="navbar-info" style={{color: 'greenyellow',fontSize: 'xx-large'}}>Muscat Bullion Accounting</strong>
 
   <div className="ms-auto d-flex align-items-center">
     <span className="text-white fw-bold me-3">

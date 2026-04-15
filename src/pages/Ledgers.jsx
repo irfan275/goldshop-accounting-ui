@@ -163,7 +163,7 @@ function Ledgers() {
         <div className="col-md-2">
            <DatePicker
             selected={fromDate}
-            onChange={(date) => setToDate(date)}
+            onChange={(date) => setFromDate(date)}
             className="form-control"
             dateFormat="dd-MMM-yyyy"
             placeholderText="Select To Date"
@@ -184,7 +184,7 @@ function Ledgers() {
         {/* SEARCH BTN */}
         <div className="col-md-1">
           <button className="btn btn-success w-100" onClick={handleSearch}>
-            Go
+            Search
           </button>
         </div>
 
@@ -210,79 +210,124 @@ function Ledgers() {
       <div className="card shadow">
         <div className="card-body table-responsive">
 
-          <table className="table table-bordered table-hover text-center">
+          <table className="table table-bordered table-hover text-center align-middle">
 
+            {/* HEADER */}
             <thead className="table-dark">
               <tr>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Description</th>
-                <th>Cash</th>
-                <th>Gold</th>
-                <th>TTB</th>
-                <th>Bank</th>
-                <th>Action</th>
+                <th rowSpan="2">Date</th>
+                <th rowSpan="2">Customer</th>
+                <th rowSpan="2">Description</th>
+
+                <th colSpan="2">Cash</th>
+                <th colSpan="2">Gold</th>
+                <th colSpan="2">TTB</th>
+                <th colSpan="2">Bank</th>
+
+                <th rowSpan="2">Action</th>
+              </tr>
+
+              <tr>
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
+
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
+
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
+
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
               </tr>
             </thead>
 
+            {/* BODY */}
             <tbody>
-              {ledgers.map((item) => {
+              {ledgers.map((item, index) => {
 
-                const getEntry = (type) =>
-                  item.entries?.find((e) => e.type === type) || {};
+                const isTotal = item.isTotal;
+                const rows = [];
 
-                return (
-                  <tr key={item._id} style={{ fontWeight:  item.isTotal ? 'bold' : 'normal' }}>
+                // 🔹 MAIN ROW (ENTRY OR TOTAL)
+                rows.push(
+                  <tr
+                    key={item._id || index}
+                    className={isTotal ? "table-warning fw-bold" : ""}
+                  >
 
-                    <td>{formatDate(item.createdAt || item.date)}</td>
+                    {/* DATE */}
+                    <td>{!isTotal ? formatDate(item.date) : ""}</td>
 
-                    <td className="fw-bold">{item.customer?.name || item.name}</td>
+                    {/* CUSTOMER */}
+                    <td className="fw-semibold">{item.customer}</td>
 
+                    {/* DESCRIPTION */}
                     <td>{item.description}</td>
 
+                    {/* CASH */}
+                    <td className="text-success">{item.cash.credit || 0}</td>
+                    <td className="text-danger">{item.cash.debit || 0}</td>
+
+                    {/* GOLD */}
+                    <td className="text-success">{item.gold.credit || 0}</td>
+                    <td className="text-danger">{item.gold.debit || 0}</td>
+
+                    {/* TTB */}
+                    <td className="text-success">{item.ttb.credit || 0}</td>
+                    <td className="text-danger">{item.ttb.debit || 0}</td>
+
+                    {/* BANK */}
+                    <td className="text-success">{item.bank.credit || 0}</td>
+                    <td className="text-danger">{item.bank.debit || 0}</td>
+
+                    {/* ACTION */}
                     <td>
-                      C:{item.cash.credit || 0}<br />
-                      D:{item.cash.debit || 0}
+                      {!isTotal && (
+                        <>
+                          <button
+                            className="btn btn-sm btn-primary me-2"
+                            onClick={() => navigate(`/ledgers/edit/${item._id}`)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDelete(item._id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </td>
-
-                    <td>
-                      C:{item.gold.credit || 0}<br />
-                      D:{item.gold.debit || 0}
-                    </td>
-
-                    <td>
-                      C:{item.ttb.credit || 0}<br />
-                      D:{item.ttb.debit || 0}
-                    </td>
-
-                    <td>
-                      C:{item.bank.credit || 0}<br />
-                      D:{item.bank.debit || 0}
-                    </td>
-
-                    <td>
-                      {!item.isTotal && (<button
-                        className="btn btn-sm btn-primary me-2"
-                        onClick={() => navigate(`/ledgers/edit/${item._id}`)}
-                      >
-                        Edit
-                      </button>)}
-
-                      {!item.isTotal && (<button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(item._id)}
-                      >
-                        Delete
-                      </button>)}
-                    </td>
-
                   </tr>
                 );
+
+                // 🔥 CLOSING ROW (RIGHT AFTER TOTAL)
+                if (isTotal) {
+                  rows.push(
+                    <tr key={"closing-" + index} className="table-dark text-white">
+
+                      <td colSpan="3">
+                        <strong>Closing Balance</strong>
+                      </td>
+
+                      <td colSpan="2">{item.cash.closing || 0}</td>
+                      <td colSpan="2">{item.gold.closing || 0}</td>
+                      <td colSpan="2">{item.ttb.closing || 0}</td>
+                      <td colSpan="2">{item.bank.closing || 0}</td>
+
+                      <td></td>
+                    </tr>
+                  );
+                }
+
+                return rows;
               })}
             </tbody>
 
           </table>
-
         </div>
       </div>
 
