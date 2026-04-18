@@ -8,9 +8,9 @@ const API_URL = "ledger";
 //     params: { page, size, invoiceNumber,customerId }
 //   });
 // };
-export const getLedger = (invoiceNumber, customerId, fromDate, toDate) => {
+export const getLedger = (invoiceNumber, customer, fromDate, toDate) => {
   return api.get(API_URL, {
-    params: { invoiceNumber, customerId, fromDate, toDate }
+    params: { invoiceNumber, customer, fromDate, toDate }
   });
 };
 // GET customer by id
@@ -33,6 +33,9 @@ export const deleteLedger = (id) => {
   return api.delete(`${API_URL}/${id}`);
 };
 
-export const getInvoiceNumber = (id) => {
-  return api.get(`/sequence/${id}`);
+export const getInvoiceNumber = (shopId) => {
+  return api.get(`${API_URL}/sequence/${shopId}`);
+};
+export const getBalance = () => {
+  return api.get(`${API_URL}/balance/all`);
 };

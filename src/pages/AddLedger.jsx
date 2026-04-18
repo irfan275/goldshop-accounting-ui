@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { createLedger, getLedgerById, updateLedger } from "../services/ledgerService";
+import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../services/ledgerService";
 import { getCustomers } from "../services/customerService";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getShops } from "../services/userService";
 
 export default function AddLedger() {
   const { id } = useParams();
@@ -14,16 +15,27 @@ export default function AddLedger() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerResults, setCustomerResults] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+    const [shops, setShops] = useState([]);
 
   const [form, setForm] = useState({
     date: "",
     name: "",
     description: "",
+    shop: "",
     cash: { credit: "", debit: "" },
     gold_raw: { credit: "", debit: "" },
     gold_bar_1tt: { credit: "", debit: "" },
     bank: { credit: "", debit: "" }
   });
+    useEffect(() => {
+      fetchShops();
+    }, []);
+    const fetchShops = async () => {
+      const response = await getShops();
+      setShops(response.data.data || []);
+    };
   useEffect(() => {
   if (!isEditMode) {
     const today = new Date().toISOString().split("T")[0];
@@ -54,18 +66,60 @@ export default function AddLedger() {
     }
 
   }, [id]);
+  // useEffect(() => {
+  // if (!isEditMode) {
+  //     loadInvoiceNumber();
+  //   }
+  // }, [isEditMode]);
+  useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (user?.role === "EMPLOYEE") {
+    // ✅ set form value
+    setForm(prev => ({
+      ...prev,
+      shopId: user.shopId
+    }));
+    if(!isEditMode){
+        handleShopChange(user.shopId);
+    }
+    
+  }
+}, []);
+  const handleShopChange = async (shopId) => {
+    //setSelectedShop(shopId);
+
+      if (!shopId) {
+        setInvoiceNumber("");
+        return;
+      }
+    // ✅ set form value
+    setForm(prev => ({
+      ...prev,
+      shop: shopId
+    }));
+    try {
+      const res = await getInvoiceNumber(shopId); // API call
+      setInvoiceNumber(res.data.invoiceNumber);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const loadInvoice = async () => {
     const res = await getLedgerById(id);
-    const inv = res.data;
+    const inv = res.data.data;
 
-    setSelectedCustomer(inv.customerId);
-    setCustomerSearch(inv.customerId?.name);
+    setSelectedCustomer(inv.name);
+    setCustomerSearch(inv.name);
 
     // convert entries → form
     const newForm = {
       date: inv.date?.split("T")[0],
-      name: inv.name || "",
+      name: inv.name || "", 
       description: inv.description || "",
+      shop : inv.shop || "",
+      goldRate : inv.goldRate || "",
+      goldValue : inv.goldValue || "",
       cash: { credit: "", debit: "" },
       gold_raw: { credit: "", debit: "" },
       gold_bar_1tt: { credit: "", debit: "" },
@@ -80,6 +134,34 @@ export default function AddLedger() {
     });
 
     setForm(newForm);
+    setInvoiceNumber(inv.invoiceNumber)
+    setInvoiceId(inv._id);
+};
+useEffect(() => {
+  const total = calculateGoldValue(form);
+
+  setForm((prev) => ({
+    ...prev,
+    goldValue: total
+  }));
+}, [
+  form.gold_raw,
+  form.gold_bar_1tt,
+  form.goldRate
+]);
+const TTB_GRAMS = 116.64;
+
+const calculateGoldValue = (form) => {
+  const raw =
+    (form.gold_raw.credit || 0) - (form.gold_raw.debit || 0);
+
+  const bar =
+    (form.gold_bar_1tt.credit || 0) -
+    (form.gold_bar_1tt.debit || 0);
+
+  const totalGrams = raw + bar * TTB_GRAMS;
+
+  return totalGrams * (form.goldRate || 0);
 };
   const handleChange = (section, field, value) => {
     setForm({
@@ -114,27 +196,41 @@ export default function AddLedger() {
   };
 
   const handleSubmit = async () => {
-    const payload = {
-      date: form.date,
-      name: selectedCustomer?.name || form.name,
-      customerId: selectedCustomer?._id,
-      description: form.description,
-      entries: buildEntries()
-    };
+    try{
+      setLoading(true); // 🔥 start loader
+      const payload = {
+        date: form.date,
+        name: selectedCustomer?.name || form.name,
+        //customerId: selectedCustomer?._id,
+        description: form.description,
+        shop:form.shop,
+        goldRate : form.goldRate,
+        goldValue : form.goldValue,
+        entries: buildEntries()
+      };
 
-    if (isEditMode) {
+      if (isEditMode) {
+      
+        await updateLedger(id, payload);
+        setInvoiceId(id);
+        alert("Ledger updated");
+        
+      } else {
+
+        let invoice = await createLedger(payload);
+        setInvoiceId(invoice.data.data._id);
+        alert("Ledger created");
+
+      }
+      navigate("/ledgers");
+    }catch (error) {
+        console.error(error);
+        alert("Something went wrong");
+
+      } finally {
+        setLoading(false); // 🔥 always stop loader
+      }
     
-      await updateLedger(id, payload);
-      setInvoiceId(id);
-      alert("Ledger updated");
-
-    } else {
-
-      let invoice = await createLedger(payload);
-      setInvoiceId(invoice.data.data._id);
-      alert("Ledger created");
-
-    }
   };
 
   return (
@@ -143,7 +239,15 @@ export default function AddLedger() {
   {/* ===== CARD ===== */}
   <div className="card shadow">
     <div className="card-header bg-primary text-white">
-      <h5 className="mb-0">Ledger Entry</h5>
+      <h3>{isEditMode ? "Edit Ledger" : "Create Ledger"}</h3>
+      {invoiceNumber && (
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <strong>Invoice Number: </strong> {invoiceNumber}
+          </div>
+          
+        </div>
+      )}
     </div>
 
     <div className="card-body">
@@ -168,7 +272,31 @@ export default function AddLedger() {
             />
           </div>
         </div>
+        {/* SHOP */}
 
+        <div className="col-md-4">
+
+          <label className="form-label"><strong>Shop</strong></label>
+
+          <select
+            className="form-control"
+            name="shopId"
+            value={form.shop}
+            onChange={(e) => handleShopChange(e.target.value )}
+            disabled={JSON.parse(localStorage.getItem("user"))?.role === "EMPLOYEE"}
+          >
+
+            <option value="">Select Shop</option>
+
+            {shops.map((shop) => (
+              <option key={shop._id} value={shop._id}>
+                {shop.name}
+              </option>
+            ))}
+
+          </select>
+
+        </div>
         <div className="col-md-5 position-relative">
           <label className="form-label">Customer</label>
           <input
@@ -236,51 +364,112 @@ export default function AddLedger() {
         </div>
       </div>
 
-      {/* ===== GOLD RAW ===== */}
-      <div className="card mb-3">
-        <div className="card-header">Gold Raw (grams)</div>
-        <div className="card-body row">
-          <div className="col-md-6">
-            <input
-              className="form-control"
-              placeholder="Credit"
-              value={form.gold_raw.credit}
-              onChange={(e) => handleChange("gold_raw", "credit", e.target.value)}
-            />
+<div className="card mb-3">
+
+  {/* HEADER */}
+  <div className="card-header bg-warning d-flex justify-content-between align-items-center">
+    <strong>🪙 Gold</strong>
+
+    <div className="d-flex gap-2">
+      <input
+        type="number"
+        className="form-control form-control-sm"
+        style={{ width: "120px" }}
+        placeholder="Rate/g"
+        value={form.goldRate}
+        onChange={(e) =>
+          setForm({ ...form, goldRate: Number(e.target.value) })
+        }
+      />
+
+      <input
+        className="form-control form-control-sm"
+        style={{ width: "150px" }}
+        value={form.goldValue}
+        readOnly
+      />
+    </div>
+  </div>
+
+  {/* BODY */}
+  <div className="card-body">
+
+    <div className="row g-3">
+
+      {/* 🔹 GOLD RAW */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-light">
+
+          <h6 className="text-warning mb-3">
+            ⚖️ Gold Raw (grams)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-6">
+              <input
+                className="form-control"
+                placeholder="Credit"
+                value={form.gold_raw.credit}
+                onChange={(e) =>
+                  handleChange("gold_raw", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-6">
+              <input
+                className="form-control"
+                placeholder="Debit"
+                value={form.gold_raw.debit}
+                onChange={(e) =>
+                  handleChange("gold_raw", "debit", e.target.value)
+                }
+              />
+            </div>
           </div>
-          <div className="col-md-6">
-            <input
-              className="form-control"
-              placeholder="Debit"
-              value={form.gold_raw.debit}
-              onChange={(e) => handleChange("gold_raw", "debit", e.target.value)}
-            />
-          </div>
+
         </div>
       </div>
 
-      {/* ===== GOLD BAR ===== */}
-      <div className="card mb-3">
-        <div className="card-header">Gold Bar (1 TTB)</div>
-        <div className="card-body row">
-          <div className="col-md-6">
-            <input
-              className="form-control"
-              placeholder="Credit (count)"
-              value={form.gold_bar_1tt.credit}
-              onChange={(e) => handleChange("gold_bar_1tt", "credit", e.target.value)}
-            />
+      {/* 🔹 GOLD BAR */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-white shadow-sm">
+
+          <h6 className="text-primary mb-3">
+            🪙 Gold Bar (TTB)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-6">
+              <input
+                className="form-control"
+                placeholder="Credit (count)"
+                value={form.gold_bar_1tt.credit}
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-6">
+              <input
+                className="form-control"
+                placeholder="Debit (count)"
+                value={form.gold_bar_1tt.debit}
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "debit", e.target.value)
+                }
+              />
+            </div>
           </div>
-          <div className="col-md-6">
-            <input
-              className="form-control"
-              placeholder="Debit (count)"
-              value={form.gold_bar_1tt.debit}
-              onChange={(e) => handleChange("gold_bar_1tt", "debit", e.target.value)}
-            />
-          </div>
+
         </div>
       </div>
+
+    </div>
+
+  </div>
+</div>
 
       {/* ===== BANK ===== */}
       <div className="card mb-3">
@@ -304,10 +493,19 @@ export default function AddLedger() {
           </div>
         </div>
       </div>
-
+        {loading && (
+          <div className="overlay-loader">
+            <div className="spinner-border text-light" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
       {/* ===== BUTTON ===== */}
       <div className="text-end">
         <button className="btn btn-success" onClick={handleSubmit}>
+          {/* {loading && (
+            <span className="spinner-border spinner-border-sm me-2"></span>
+          )} */}
           {isEditMode ? "Update Ledger" : "Save Ledger"}
         </button>
       </div>

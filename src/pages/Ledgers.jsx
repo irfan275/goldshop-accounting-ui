@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteLedger, getLedger } from "../services/ledgerService";
+import { deleteLedger, getBalance, getLedger } from "../services/ledgerService";
 import Pagination from "./Pagination";
 import { getCustomers } from "../services/customerService";
 import { format, subDays } from "date-fns";
@@ -26,7 +26,7 @@ function Ledgers() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerResults, setCustomerResults] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-
+  const [balance, setBalance] = useState(null);
   const [ledgers, setLedgers] = useState([]);
 
   // ---------------- LOAD LEDGERS ----------------
@@ -36,17 +36,17 @@ function Ledgers() {
 
   const loadLedgers = async (pageNumber = 1) => {
     let invoiceNo = "";
-    let custId = "";
+    let customer = "";
 
     if (searchText) {
       invoiceNo = searchText;
     } else if (selectedCustomer) {
-      custId = selectedCustomer._id;
+      customer = selectedCustomer.name;
     }
 
     const response = await getLedger(
       invoiceNo,
-      custId,
+      customer,
       fromDate.toLocaleDateString("en-CA"),
       toDate.toLocaleDateString("en-CA")
     );
@@ -85,7 +85,13 @@ function Ledgers() {
     setCustomerSearch(c.name);
     setCustomerResults([]);
   };
-
+  useEffect(() => {
+    loadBalance();
+  }, []);
+  const loadBalance = async () => {
+    const res = await getBalance(); // new API
+    setBalance(res.data);
+  };
   // ---------------- CUSTOMER SEARCH ----------------
   useEffect(() => {
     if (customerSearch.length < 3 || selectedCustomer) {
@@ -120,7 +126,51 @@ function Ledgers() {
           Add Entry
         </button>
       </div>
+      {balance && (
+        <div className="row mb-3">
 
+          {/* CASH */}
+          <div className="col-md-3">
+            <div className="card shadow border-0 bg-success text-white">
+              <div className="card-body text-center">
+                <h6 className="mb-1">💰 Cash</h6>
+                <h4 className="mb-0">{balance.cash}</h4>
+              </div>
+            </div>
+          </div>
+
+          {/* GOLD */}
+          <div className="col-md-3">
+            <div className="card shadow border-0 bg-warning text-dark">
+              <div className="card-body text-center">
+                <h6 className="mb-1">🪙 Gold (g)</h6>
+                <h4 className="mb-0">{balance.gold_raw}</h4>
+              </div>
+            </div>
+          </div>
+
+          {/* TTB */}
+          <div className="col-md-3">
+            <div className="card shadow border-0 bg-info text-white">
+              <div className="card-body text-center">
+                <h6 className="mb-1">🪙 TTB</h6>
+                <h4 className="mb-0">{balance.gold_bar}</h4>
+              </div>
+            </div>
+          </div>
+
+          {/* BANK */}
+          <div className="col-md-3">
+            <div className="card shadow border-0 bg-primary text-white">
+              <div className="card-body text-center">
+                <h6 className="mb-1">🏦 Bank</h6>
+                <h4 className="mb-0">{balance.bank}</h4>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
       {/* FILTERS */}
       <div className="row g-2 mb-3">
 
@@ -135,14 +185,19 @@ function Ledgers() {
           />
 
           {customerResults.length > 0 && (
-            <ul className="list-group position-absolute w-100 shadow">
+            <ul className="list-group position-absolute w-100 shadow" style={{
+              zIndex: 9999,
+              maxHeight: "200px",
+              overflowY: "auto",
+              background: "white"
+            }}>
               {customerResults.map((c) => (
                 <li
                   key={c._id}
                   className="list-group-item list-group-item-action"
                   onClick={() => handleCustomerSelection(c)}
                 >
-                  {c.name} - {c.civilId}
+                  {c.name}  {c.civilId}
                 </li>
               ))}
             </ul>
@@ -216,15 +271,16 @@ function Ledgers() {
             <thead className="table-dark">
               <tr>
                 <th rowSpan="2">Date</th>
+                <th rowSpan="2">Invoice No</th>
                 <th rowSpan="2">Customer</th>
-                <th rowSpan="2">Description</th>
+                <th rowSpan="2" style={{width:'25%'}}>Description</th>
 
                 <th colSpan="2">Cash</th>
                 <th colSpan="2">Gold</th>
                 <th colSpan="2">TTB</th>
                 <th colSpan="2">Bank</th>
 
-                <th rowSpan="2">Action</th>
+                <th rowSpan="2" style={{width:'12%'}}>Action</th>
               </tr>
 
               <tr>
@@ -259,6 +315,8 @@ function Ledgers() {
                     {/* DATE */}
                     <td>{!isTotal ? formatDate(item.date) : ""}</td>
 
+                    {/* Invoice Nummber */}
+                    <td>{item.invoiceNumber}</td>
                     {/* CUSTOMER */}
                     <td className="fw-semibold">{item.customer}</td>
 
@@ -287,7 +345,7 @@ function Ledgers() {
                         <>
                           <button
                             className="btn btn-sm btn-primary me-2"
-                            onClick={() => navigate(`/ledgers/edit/${item._id}`)}
+                            onClick={() => navigate(`/ledgers/edit/${item.id}`)}
                           >
                             Edit
                           </button>
@@ -309,7 +367,7 @@ function Ledgers() {
                   rows.push(
                     <tr key={"closing-" + index} className="table-dark text-white">
 
-                      <td colSpan="3">
+                      <td colSpan="4">
                         <strong>Closing Balance</strong>
                       </td>
 
