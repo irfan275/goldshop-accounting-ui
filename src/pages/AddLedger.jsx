@@ -19,15 +19,27 @@ export default function AddLedger() {
   const [loading, setLoading] = useState(false);
     const [shops, setShops] = useState([]);
 
+  const emptyEntry = {
+  credit: 0,
+  debit: 0,
+  rate: 0,
+  value: 0
+};
   const [form, setForm] = useState({
     date: "",
     name: "",
     description: "",
     shop: "",
-    cash: { credit: "", debit: "" },
-    gold_raw: { credit: "", debit: "" },
-    gold_bar_1tt: { credit: "", debit: "" },
-    bank: { credit: "", debit: "" }
+    cash: emptyEntry,
+    gold_raw: emptyEntry,
+    gold_bar_1tt: emptyEntry,
+    silver_raw: emptyEntry,
+    silver_bar_kg: emptyEntry,
+    bank: emptyEntry,
+    goldRate : "",
+    goldValue: "",
+    silverRate : "",
+    silverValue : ""
   });
     useEffect(() => {
       fetchShops();
@@ -105,50 +117,83 @@ export default function AddLedger() {
       console.error(err);
     }
   };
+
   const loadInvoice = async () => {
-    const res = await getLedgerById(id);
+      const res = await getLedgerById(id);
     const inv = res.data.data;
 
     setSelectedCustomer(inv.name);
     setCustomerSearch(inv.name);
 
-    // convert entries → form
     const newForm = {
       date: inv.date?.split("T")[0],
-      name: inv.name || "", 
+      name: inv.name || "",
       description: inv.description || "",
-      shop : inv.shop || "",
-      goldRate : inv.goldRate || "",
-      goldValue : inv.goldValue || "",
-      cash: { credit: "", debit: "" },
-      gold_raw: { credit: "", debit: "" },
-      gold_bar_1tt: { credit: "", debit: "" },
-      bank: { credit: "", debit: "" }
+      shop: inv.shop || "",
+
+      cash: { ...emptyEntry },
+      gold_raw: { ...emptyEntry },
+      gold_bar_1tt: { ...emptyEntry },
+      silver_raw: { ...emptyEntry },
+      silver_bar_kg: { ...emptyEntry },
+      bank: { ...emptyEntry }
     };
 
     inv.entries.forEach((e) => {
-      if (e.type === "cash") newForm.cash = e;
-      if (e.type === "gold_raw") newForm.gold_raw = e;
-      if (e.type === "gold_bar") newForm.gold_bar_1tt = e;
-      if (e.type === "bank") newForm.bank = e;
-    });
+      const mapped = {
+        credit: e.credit || 0,
+        debit: e.debit || 0,
+        rate: e.rate || 0,
+        value: e.value || 0
+      };
 
+      switch (e.type) {
+        case "cash":
+          newForm.cash = mapped;
+          break;
+
+        case "gold_raw":
+          newForm.gold_raw = mapped;
+          break;
+
+        case "gold_bar_1tt":
+        case "gold_bar":
+          newForm.gold_bar_1tt = mapped;
+          break;
+
+        case "silver_raw":
+          newForm.silver_raw = mapped;
+          break;
+
+        case "silver_bar_kg":
+        case "silver_bar":
+          newForm.silver_bar_kg = mapped;
+          break;
+
+        case "bank":
+          newForm.bank = mapped;
+          break;
+
+        default:
+          break;
+      }
+    });
     setForm(newForm);
     setInvoiceNumber(inv.invoiceNumber)
     setInvoiceId(inv._id);
 };
-useEffect(() => {
-  const total = calculateGoldValue(form);
+// useEffect(() => {
+//   const total = calculateGoldValue(form);
 
-  setForm((prev) => ({
-    ...prev,
-    goldValue: total
-  }));
-}, [
-  form.gold_raw,
-  form.gold_bar_1tt,
-  form.goldRate
-]);
+//   setForm((prev) => ({
+//     ...prev,
+//     goldValue: total
+//   }));
+// }, [
+//   form.gold_raw,
+//   form.gold_bar_1tt,
+//   form.goldRate
+// ]);
 const TTB_GRAMS = 116.64;
 
 const calculateGoldValue = (form) => {
@@ -162,6 +207,31 @@ const calculateGoldValue = (form) => {
   const totalGrams = raw + bar * TTB_GRAMS;
 
   return totalGrams * (form.goldRate || 0);
+};
+const SILVER_BAR_GRAMS = 1000; // 1 KG = 1000 grams
+// useEffect(() => {
+//   const total = calculateSilverValue(form);
+
+//   setForm((prev) => ({
+//     ...prev,
+//     silverValue: total
+//   }));
+// }, [
+//   form.silver_raw,
+//   form.silver_bar_kg,
+//   form.silverRate
+// ]);
+const calculateSilverValue = (form) => {
+  const raw =
+    (form.silver_raw.credit || 0) - (form.silver_raw.debit || 0);
+
+  const bar =
+    (form.silver_bar_kg.credit || 0) -
+    (form.silver_bar_kg.debit || 0);
+
+  const totalGrams = raw + bar * SILVER_BAR_GRAMS;
+
+  return totalGrams * (form.silverRate || 0);
 };
   const handleChange = (section, field, value) => {
     setForm({
@@ -182,7 +252,9 @@ const calculateGoldValue = (form) => {
           type,
           ...extra,
           credit: Number(data.credit || 0),
-          debit: Number(data.debit || 0)
+          debit: Number(data.debit || 0),
+          rate: Number(data.rate || 0),
+          value: Number(data.value || 0)
         });
       }
     };
@@ -190,6 +262,8 @@ const calculateGoldValue = (form) => {
     pushIf("cash", form.cash);
     pushIf("gold_raw", form.gold_raw);
     pushIf("gold_bar", form.gold_bar_1tt, { subType: "1tt" });
+    pushIf("silver_raw", form.silver_raw);
+    pushIf("silver_bar", form.silver_bar_kg, { subType: "kg" });
     pushIf("bank", form.bank);
 
     return entries;
@@ -204,8 +278,6 @@ const calculateGoldValue = (form) => {
         //customerId: selectedCustomer?._id,
         description: form.description,
         shop:form.shop,
-        goldRate : form.goldRate,
-        goldValue : form.goldValue,
         entries: buildEntries()
       };
 
@@ -341,9 +413,323 @@ const calculateGoldValue = (form) => {
         </div>
       </div>
 
-      {/* ===== CASH ===== */}
+      
+
+<div className="card mb-3">
+
+  {/* HEADER */}
+  <div className="card-header bg-warning d-flex justify-content-between align-items-center">
+    <strong>🪙 Gold</strong>
+
+    {/* <div className="d-flex gap-2">
+      <input
+        type="number"
+        className="form-control form-control-sm"
+        style={{ width: "120px" }}
+        placeholder="Rate/g"
+        value={form.gold_raw.rate}
+        onChange={(e) =>
+          handleChange("gold_raw", "rate", e.target.value)
+        }
+      />
+
+      <input
+        className="form-control form-control-sm"
+        style={{ width: "150px" }}
+        value={form.gold_raw.value}
+        placeholder="Total Price"
+        onChange={(e) =>
+          handleChange("gold_raw", "value", e.target.value)
+        }
+      />
+    </div> */}
+  </div>
+
+  {/* BODY */}
+  <div className="card-body">
+
+    <div className="row g-3">
+
+      {/* 🔹 GOLD RAW */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-light">
+
+          <h6 className="text-warning mb-3">
+            ⚖️ Gold Raw (grams)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                className="form-control"
+                placeholder="Credit"
+                value={form.gold_raw.credit}
+                onChange={(e) =>
+                  handleChange("gold_raw", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                className="form-control"
+                placeholder="Debit"
+                value={form.gold_raw.debit}
+                onChange={(e) =>
+                  handleChange("gold_raw", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_raw.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("gold_raw", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_raw.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("gold_raw", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 🔹 GOLD BAR */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-white shadow-sm">
+
+          <h6 className="text-primary mb-3">
+            🪙 Gold Bar (TTB)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                className="form-control"
+                placeholder="Credit (count)"
+                value={form.gold_bar_1tt.credit}
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                className="form-control"
+                placeholder="Debit (count)"
+                value={form.gold_bar_1tt.debit}
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_bar_1tt.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_bar_1tt.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+<div className="card mb-3">
+
+  {/* HEADER */}
+  <div
+  className="card-header d-flex justify-content-between align-items-center"
+      style={{
+        background: "linear-gradient(135deg, #f5f5f5, #dcdcdc)",
+        color: "#333"
+      }}
+    >
+    <strong>
+       🥈 Silver
+    </strong>
+
+      </div>
+
+  {/* BODY */}
+  <div className="card-body">
+
+    <div className="row g-3">
+
+      {/* 🔹 SILVER RAW */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-light">
+
+          <h6 className="mb-3" style={{ color: "#6c757d" }}>
+           ⚪ Silver Raw (grams)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Credit"
+                value={form.silver_raw.credit}
+                onChange={(e) =>
+                  handleChange("silver_raw", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Debit"
+                value={form.silver_raw.debit}
+                onChange={(e) =>
+                  handleChange("silver_raw", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_raw.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("silver_raw", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_raw.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("silver_raw", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 🔹 SILVER BAR */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-white shadow-sm">
+
+          <h6 className="mb-3 text-secondary">
+            ⬜ Silver Bar (1 KG)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Credit (count)"
+                value={form.silver_bar_kg.credit}
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Debit (count)"
+                value={form.silver_bar_kg.debit}
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_bar_kg.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_bar_kg.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{/* ===== CASH ===== */}
       <div className="card mb-3">
-        <div className="card-header">Cash</div>
+        <div className="card-header bg-info">💰 Cash</div>
         <div className="card-body row">
           <div className="col-md-6">
             <input
@@ -363,117 +749,9 @@ const calculateGoldValue = (form) => {
           </div>
         </div>
       </div>
-
-<div className="card mb-3">
-
-  {/* HEADER */}
-  <div className="card-header bg-warning d-flex justify-content-between align-items-center">
-    <strong>🪙 Gold</strong>
-
-    <div className="d-flex gap-2">
-      <input
-        type="number"
-        className="form-control form-control-sm"
-        style={{ width: "120px" }}
-        placeholder="Rate/g"
-        value={form.goldRate}
-        onChange={(e) =>
-          setForm({ ...form, goldRate: Number(e.target.value) })
-        }
-      />
-
-      <input
-        className="form-control form-control-sm"
-        style={{ width: "150px" }}
-        value={form.goldValue}
-        readOnly
-      />
-    </div>
-  </div>
-
-  {/* BODY */}
-  <div className="card-body">
-
-    <div className="row g-3">
-
-      {/* 🔹 GOLD RAW */}
-      <div className="col-md-6">
-        <div className="border rounded p-3 bg-light">
-
-          <h6 className="text-warning mb-3">
-            ⚖️ Gold Raw (grams)
-          </h6>
-
-          <div className="row g-2">
-            <div className="col-6">
-              <input
-                className="form-control"
-                placeholder="Credit"
-                value={form.gold_raw.credit}
-                onChange={(e) =>
-                  handleChange("gold_raw", "credit", e.target.value)
-                }
-              />
-            </div>
-
-            <div className="col-6">
-              <input
-                className="form-control"
-                placeholder="Debit"
-                value={form.gold_raw.debit}
-                onChange={(e) =>
-                  handleChange("gold_raw", "debit", e.target.value)
-                }
-              />
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* 🔹 GOLD BAR */}
-      <div className="col-md-6">
-        <div className="border rounded p-3 bg-white shadow-sm">
-
-          <h6 className="text-primary mb-3">
-            🪙 Gold Bar (TTB)
-          </h6>
-
-          <div className="row g-2">
-            <div className="col-6">
-              <input
-                className="form-control"
-                placeholder="Credit (count)"
-                value={form.gold_bar_1tt.credit}
-                onChange={(e) =>
-                  handleChange("gold_bar_1tt", "credit", e.target.value)
-                }
-              />
-            </div>
-
-            <div className="col-6">
-              <input
-                className="form-control"
-                placeholder="Debit (count)"
-                value={form.gold_bar_1tt.debit}
-                onChange={(e) =>
-                  handleChange("gold_bar_1tt", "debit", e.target.value)
-                }
-              />
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</div>
-
       {/* ===== BANK ===== */}
       <div className="card mb-3">
-        <div className="card-header">Bank</div>
+        <div className="card-header bg-info">🏦 Bank</div>
         <div className="card-body row">
           <div className="col-md-6">
             <input
@@ -513,7 +791,7 @@ const calculateGoldValue = (form) => {
   </div>
 
   {/* ===== PREVIEW TABLE ===== */}
-  <div className="card shadow mt-4">
+  {/* <div className="card shadow mt-4">
     <div className="card-header bg-dark text-white">
       Preview
     </div>
@@ -559,7 +837,7 @@ const calculateGoldValue = (form) => {
         </tbody>
       </table>
     </div>
-  </div>
+  </div> */}
 
 </div>
   );
