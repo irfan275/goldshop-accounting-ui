@@ -20,10 +20,10 @@ export default function AddLedger() {
     const [shops, setShops] = useState([]);
 
   const emptyEntry = {
-  credit: 0,
-  debit: 0,
-  rate: 0,
-  value: 0
+  credit: "",
+  debit: "",
+  rate: "",
+  value: ""
 };
   const [form, setForm] = useState({
     date: "",
@@ -35,11 +35,7 @@ export default function AddLedger() {
     gold_bar_1tt: emptyEntry,
     silver_raw: emptyEntry,
     silver_bar_kg: emptyEntry,
-    bank: emptyEntry,
-    goldRate : "",
-    goldValue: "",
-    silverRate : "",
-    silverValue : ""
+    bank: emptyEntry
   });
     useEffect(() => {
       fetchShops();
@@ -524,7 +520,7 @@ const calculateSilverValue = (form) => {
               <label className="form-label">Credit</label>
               <input
                 className="form-control"
-                placeholder="Credit (count)"
+                placeholder="Credit"
                 value={form.gold_bar_1tt.credit}
                 onChange={(e) =>
                   handleChange("gold_bar_1tt", "credit", e.target.value)
@@ -536,7 +532,7 @@ const calculateSilverValue = (form) => {
               <label className="form-label">Debit</label>
               <input
                 className="form-control"
-                placeholder="Debit (count)"
+                placeholder="Debit"
                 value={form.gold_bar_1tt.debit}
                 onChange={(e) =>
                   handleChange("gold_bar_1tt", "debit", e.target.value)
@@ -609,7 +605,7 @@ const calculateSilverValue = (form) => {
             <div className="col-3">
               <label className="form-label">Credit</label>
               <input
-                type="number"
+                //type="number"
                 className="form-control"
                 placeholder="Credit"
                 value={form.silver_raw.credit}
@@ -622,7 +618,7 @@ const calculateSilverValue = (form) => {
             <div className="col-3">
               <label className="form-label">Debit</label>
               <input
-                type="number"
+                //type="number"
                 className="form-control"
                 placeholder="Debit"
                 value={form.silver_raw.debit}
@@ -672,9 +668,9 @@ const calculateSilverValue = (form) => {
             <div className="col-3">
               <label className="form-label">Credit</label>
               <input
-                type="number"
+                //type="number"
                 className="form-control"
-                placeholder="Credit (count)"
+                placeholder="Credit"
                 value={form.silver_bar_kg.credit}
                 onChange={(e) =>
                   handleChange("silver_bar_kg", "credit", e.target.value)
@@ -685,9 +681,9 @@ const calculateSilverValue = (form) => {
             <div className="col-3">
               <label className="form-label">Debit</label>
               <input
-                type="number"
+                //type="number"
                 className="form-control"
-                placeholder="Debit (count)"
+                placeholder="Debit"
                 value={form.silver_bar_kg.debit}
                 onChange={(e) =>
                   handleChange("silver_bar_kg", "debit", e.target.value)

@@ -129,18 +129,8 @@ function Ledgers() {
       {balance && (
         <div className="row mb-3">
 
-          {/* CASH */}
-          <div className="col-md-3">
-            <div className="card shadow border-0 bg-success text-white">
-              <div className="card-body text-center">
-                <h6 className="mb-1">💰 Cash</h6>
-                <h4 className="mb-0">{balance.cash}</h4>
-              </div>
-            </div>
-          </div>
-
           {/* GOLD */}
-          <div className="col-md-3">
+          <div className="col-md-2">
             <div className="card shadow border-0 bg-warning text-dark">
               <div className="card-body text-center">
                 <h6 className="mb-1">🪙 Gold (g)</h6>
@@ -150,7 +140,7 @@ function Ledgers() {
           </div>
 
           {/* TTB */}
-          <div className="col-md-3">
+          <div className="col-md-2">
             <div className="card shadow border-0 bg-info text-white">
               <div className="card-body text-center">
                 <h6 className="mb-1">🪙 TTB</h6>
@@ -158,9 +148,34 @@ function Ledgers() {
               </div>
             </div>
           </div>
-
+          <div className="col-md-2">
+            <div className="card shadow border-0 bg-primary   text-dark">
+              <div className="card-body text-center">
+                <h6 className="mb-1">⚪ Silver (g)</h6>
+                <h4 className="mb-0">{balance.silver_raw}</h4>
+              </div>
+            </div>
+          </div>
+          {/* TTB */}
+          <div className="col-md-2">
+            <div className="card shadow border-0 bg-info text-white">
+              <div className="card-body text-center">
+                <h6 className="mb-1">⬜ S-KGB</h6>
+                <h4 className="mb-0">{balance.silver_bar}</h4>
+              </div>
+            </div>
+          </div>
+          {/* CASH */}
+          <div className="col-md-2">
+            <div className="card shadow border-0 bg-success text-white">
+              <div className="card-body text-center">
+                <h6 className="mb-1">💰 Cash</h6>
+                <h4 className="mb-0">{balance.cash}</h4>
+              </div>
+            </div>
+          </div>
           {/* BANK */}
-          <div className="col-md-3">
+          <div className="col-md-2">
             <div className="card shadow border-0 bg-primary text-white">
               <div className="card-body text-center">
                 <h6 className="mb-1">🏦 Bank</h6>
@@ -275,9 +290,11 @@ function Ledgers() {
                 <th rowSpan="2">Customer</th>
                 <th rowSpan="2" style={{width:'25%'}}>Description</th>
 
-                <th colSpan="2">Cash</th>
                 <th colSpan="2">Gold</th>
                 <th colSpan="2">TTB</th>
+                <th colSpan="2">Silver</th>
+                <th colSpan="2">KGB</th>
+                <th colSpan="2">Cash</th>
                 <th colSpan="2">Bank</th>
 
                 <th rowSpan="2" style={{width:'12%'}}>Action</th>
@@ -293,6 +310,11 @@ function Ledgers() {
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
 
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
+
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
               </tr>
@@ -323,21 +345,31 @@ function Ledgers() {
                     {/* DESCRIPTION */}
                     <td>{item.description}</td>
 
-                    {/* CASH */}
-                    <td className="text-success">{item.cash.credit || 0}</td>
-                    <td className="text-danger">{item.cash.debit || 0}</td>
+                    
 
                     {/* GOLD */}
-                    <td className="text-success">{item.gold.credit || 0}</td>
-                    <td className="text-danger">{item.gold.debit || 0}</td>
+                    <td className="bg-warning-subtle text-success">{item.gold.credit || 0}</td>
+                    <td className="bg-warning-subtle text-danger">{item.gold.debit || 0}</td>
 
                     {/* TTB */}
-                    <td className="text-success">{item.ttb.credit || 0}</td>
-                    <td className="text-danger">{item.ttb.debit || 0}</td>
+                    <td className="bg-warning-subtle text-success">{item.ttb.credit || 0}</td>
+                    <td className="bg-warning-subtle text-danger">{item.ttb.debit || 0}</td>
+
+                    {/* Silver */}
+                    <td className="text-success" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.debit || 0}</td>
+
+                    {/* KGB */}
+                    <td className="text-success" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.debit || 0}</td>
+
+                    {/* CASH */}
+                    <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{item.cash.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td>
 
                     {/* BANK */}
-                    <td className="text-success">{item.bank.credit || 0}</td>
-                    <td className="text-danger">{item.bank.debit || 0}</td>
+                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank.debit || 0}</td>
 
                     {/* ACTION */}
                     <td>
@@ -371,9 +403,12 @@ function Ledgers() {
                         <strong>Closing Balance</strong>
                       </td>
 
-                      <td colSpan="2">{item.cash.closing || 0}</td>
+                      
                       <td colSpan="2">{item.gold.closing || 0}</td>
                       <td colSpan="2">{item.ttb.closing || 0}</td>
+                      <td colSpan="2">{item.silver.closing || 0}</td>
+                      <td colSpan="2">{item.silver_bar.closing || 0}</td>
+                      <td colSpan="2">{item.cash.closing || 0}</td>
                       <td colSpan="2">{item.bank.closing || 0}</td>
 
                       <td></td>
