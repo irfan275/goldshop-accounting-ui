@@ -278,17 +278,17 @@ function Ledgers() {
 
       {/* TABLE */}
       <div className="card shadow">
-        <div className="card-body table-responsive">
+        <div className="card-body table-responsive p-0">
 
-          <table className="table table-bordered table-hover text-center align-middle">
+          <table className="table table-bordered table-hover text-center align-middle text-nowrap" style={{ minWidth: "1600px" }}>
 
             {/* HEADER */}
             <thead className="table-dark">
               <tr>
-                <th rowSpan="2">Date</th>
-                <th rowSpan="2">Invoice No</th>
+                <th rowSpan="2" style={{width:'6%'}}>Date</th>
+                <th rowSpan="2" style={{width:'6%'}}>Invoice No</th>
                 <th rowSpan="2">Customer</th>
-                <th rowSpan="2" style={{width:'25%'}}>Description</th>
+                <th rowSpan="2" style={{width:'30%'}}>Description</th>
 
                 <th colSpan="2">Gold</th>
                 <th colSpan="2">TTB</th>
@@ -297,7 +297,7 @@ function Ledgers() {
                 <th colSpan="2">Cash</th>
                 <th colSpan="2">Bank</th>
 
-                <th rowSpan="2" style={{width:'12%'}}>Action</th>
+                <th rowSpan="2" style={{width:'10%'}}>Action</th>
               </tr>
 
               <tr>
@@ -331,7 +331,7 @@ function Ledgers() {
                 rows.push(
                   <tr
                     key={item._id || index}
-                    className={isTotal ? "table-warning fw-bold" : ""}
+                    className={isTotal ? "table-warning fw-bold" : !item.isOfficial? "table-danger":""}
                   >
 
                     {/* DATE */}

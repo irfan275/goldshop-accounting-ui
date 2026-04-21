@@ -30,6 +30,7 @@ export default function AddLedger() {
     name: "",
     description: "",
     shop: "",
+    isOfficial: true,
     cash: emptyEntry,
     gold_raw: emptyEntry,
     gold_bar_1tt: emptyEntry,
@@ -126,6 +127,7 @@ export default function AddLedger() {
       name: inv.name || "",
       description: inv.description || "",
       shop: inv.shop || "",
+      isOfficial : inv.isOfficial,
 
       cash: { ...emptyEntry },
       gold_raw: { ...emptyEntry },
@@ -273,6 +275,7 @@ const calculateSilverValue = (form) => {
         name: selectedCustomer?.name || form.name,
         //customerId: selectedCustomer?._id,
         description: form.description,
+        isOfficial : form.isOfficial,
         shop:form.shop,
         entries: buildEntries()
       };
@@ -397,17 +400,52 @@ const calculateSilverValue = (form) => {
             </ul>
           )}
         </div>
-
-        <div className="col-md-4">
-          <label className="form-label">Description</label>
-          <input
-            className="form-control"
-            placeholder="Enter description"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-        </div>
       </div>
+      <div className="row mb-3">
+
+  {/* Description */}
+  <div className="col-md-6">
+    <label className="form-label">Description</label>
+    <input
+      className="form-control"
+      placeholder="Enter description"
+      value={form.description}
+      onChange={(e) =>
+        setForm({ ...form, description: e.target.value })
+      }
+    />
+  </div>
+
+  {/* Status */}
+  <div className="col-md-4">
+    <label className="form-label">Status</label>
+
+    <div className="d-flex align-items-center gap-4 mt-">
+
+      <div className="form-check form-switch m-0">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          style={{ transform: "scale(1.5)", transformOrigin: "left center" }}
+          checked={form.isOfficial || false}
+          onChange={(e) =>
+            setForm({ ...form, isOfficial: e.target.checked })
+          }
+        />
+      </div>
+
+      <span
+        className={`badge ${
+          form.isOfficial ? "bg-success" : "bg-danger"
+        }`}
+      >
+        {form.isOfficial ? "Official" : "Unofficial"}
+      </span>
+
+    </div>
+  </div>
+
+</div>
 
       
 
