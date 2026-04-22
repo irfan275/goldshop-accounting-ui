@@ -6,6 +6,9 @@ import { getCustomers } from "../services/customerService";
 import { format, subDays } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 function Ledgers() {
   const navigate = useNavigate();
@@ -112,20 +115,266 @@ function Ledgers() {
     return new Date(date).toLocaleDateString();
   };
 
+
+const handleExport = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Ledger");
+
+  const totalColumns = 16;
+
+  // ===== BORDER STYLE =====
+  const thinBorder = {
+    top: { style: "thin", color: { argb: "FF999999" } },
+    left: { style: "thin", color: { argb: "FF999999" } },
+    bottom: { style: "thin", color: { argb: "FF999999" } },
+    right: { style: "thin", color: { argb: "FF999999" } }
+  };
+
+  // ================= HEADER =================
+
+  sheet.addRow([
+    "Date", "Invoice", "Customer", "Description",
+    "Gold", "", "TTB", "", "Silver", "", "KGB", "",
+    "Cash", "", "Bank", ""
+  ]);
+
+  sheet.addRow([
+    "", "", "", "",
+    "Cr", "Dr",
+    "Cr", "Dr",
+    "Cr", "Dr",
+    "Cr", "Dr",
+    "Cr", "Dr",
+    "Cr", "Dr"
+  ]);
+
+  // Merge header
+  sheet.mergeCells("A1:A2");
+  sheet.mergeCells("B1:B2");
+  sheet.mergeCells("C1:C2");
+  sheet.mergeCells("D1:D2");
+
+  [
+    ["E1","F1"], ["G1","H1"], ["I1","J1"],
+    ["K1","L1"], ["M1","N1"], ["O1","P1"]
+  ].forEach(([s, e]) => sheet.mergeCells(`${s}:${e}`));
+
+  // Header style
+  [1, 2].forEach(r => {
+    sheet.getRow(r).eachCell(cell => {
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = thinBorder;
+    });
+  });
+
+  sheet.views = [{ state: "frozen", ySplit: 2 }];
+
+  // ================= DATA =================
+
+  ledgers.forEach(item => {
+
+    const row = sheet.addRow([
+      item.date ? new Date(item.date).toLocaleDateString() : "",
+      item.invoiceNumber,
+      item.customer,
+      item.description,
+
+      item.gold?.credit || 0,
+      item.gold?.debit || 0,
+
+      item.ttb?.credit || 0,
+      item.ttb?.debit || 0,
+
+      item.silver?.credit || 0,
+      item.silver?.debit || 0,
+
+      item.silver_bar?.credit || 0,
+      item.silver_bar?.debit || 0,
+
+      item.cash?.credit || 0,
+      item.cash?.debit || 0,
+
+      item.bank?.credit || 0,
+      item.bank?.debit || 0
+    ]);
+
+    // ===== ROW STYLING =====
+    for (let i = 1; i <= totalColumns; i++) {
+      const cell = row.getCell(i);
+
+      cell.border = thinBorder;
+
+      cell.alignment = {
+        horizontal: i <= 4 ? "left" : "center",
+        vertical: "middle"
+      };
+
+      if ([5,7,9,11,13,15].includes(i)) {
+        cell.font = { color: { argb: "FF008000" } };
+      }
+
+      if ([6,8,10,12,14,16].includes(i)) {
+        cell.font = { color: { argb: "FFFF0000" } };
+      }
+
+      if ([5,6,7,8].includes(i)) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
+      }
+
+      if ([9,10,11,12].includes(i)) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEBEEF0" } };
+      }
+
+      if ([13,14].includes(i)) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEACAB3" } };
+      }
+
+      if ([15,16].includes(i)) {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF73A3E7" } };
+      }
+    }
+
+    // ================= TOTAL =================
+    if (item.isTotal) {
+      for (let i = 1; i <= totalColumns; i++) {
+        const cell = row.getCell(i);
+
+        cell.font = { bold: true };
+        cell.border = thinBorder;
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFE699" }
+        };
+      }
+
+      // ================= CLOSING BALANCE =================
+const closingRow = sheet.addRow([
+  "", "", "", "",
+  item.gold?.closing || 0, item.gold?.closingDr || "",
+  item.ttb?.closing || 0, item.ttb?.closingDr || "",
+  item.silver?.closing || 0, item.silver?.closingDr || "",
+  item.silver_bar?.closing || 0, item.silver_bar?.closingDr || "",
+  item.cash?.closing || 0, item.cash?.closingDr || "",
+  item.bank?.closing || 0, item.bank?.closingDr || ""
+]);
+
+const r = closingRow.number;
+
+// merge
+sheet.mergeCells(`A${r}:C${r}`);
+//closingRow.getCell(4).value = "Closing Balance";
+
+// IMPORTANT: ONLY style first cell (A)
+const cell = closingRow.getCell(4);
+
+cell.value = "Closing Balance";
+cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+cell.fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FF343A40" }
+};
+
+// THIS is the key fix
+cell.alignment = {
+  horizontal: "center",   // makes it appear centered across A-D
+  vertical: "middle"
+};
+
+// borders for merged area
+for (let i = 1; i <= 4; i++) {
+  //closingRow.getCell(i).border = thinBorder;
+  const cell = closingRow.getCell(i);
+
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF343A40" }
+  };
+
+  cell.font = {
+    bold: true,
+    color: { argb: "FFFFFFFF" }
+  };
+
+  cell.alignment = {
+    horizontal: "center",
+    vertical: "middle"
+  };
+
+  cell.border = thinBorder;
+}
+
+// data columns styling
+for (let i = 5; i <= totalColumns; i++) {
+  const c = closingRow.getCell(i);
+
+  c.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  c.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF343A40" }
+  };
+  c.alignment = { horizontal: "center", vertical: "middle" };
+  c.border = thinBorder;
+}
+
+    }
+  });
+
+  // ================= COLUMN WIDTH =================
+
+  sheet.columns = [
+    { width: 12 },
+    { width: 12 },
+    { width: 20 },
+    { width: 40 },
+
+    { width: 9 }, { width: 9 },
+    { width: 9 }, { width: 9 },
+    { width: 9 }, { width: 9 },
+    { width: 9 }, { width: 9 },
+    { width: 9 }, { width: 9 },
+    { width: 9 }, { width: 9 }
+  ];
+
+  sheet.getColumn(4).alignment = { wrapText: true };
+
+  // ================= EXPORT =================
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), "Ledger.xlsx");
+};
   return (
     <div className="container mt-3">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3>Ledgers</h3>
 
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/ledgers/add")}
-        >
-          Add Entry
-        </button>
-      </div>
+  {/* LEFT */}
+  <h3 className="mb-0">Ledgers</h3>
+
+  {/* RIGHT */}
+  <div className="d-flex gap-2">
+    
+    <button
+      className="btn btn-primary"
+      onClick={() => navigate("/ledgers/add")}
+    >
+      Add Entry
+    </button>
+    <button
+      className="btn btn-success"
+      onClick={handleExport}
+    >
+      Export Excel
+    </button>
+
+  </div>
+
+</div>
       {balance && (
         <div className="row mb-3">
 

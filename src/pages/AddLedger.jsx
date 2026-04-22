@@ -269,7 +269,10 @@ const calculateSilverValue = (form) => {
 
   const handleSubmit = async () => {
     try{
-      setLoading(true); // 🔥 start loader
+      if (!selectedCustomer) return alert("Select customer");
+      if (!form.description) return alert("add desccription");
+      if (!form.shop) return alert("select shop");
+      
       const payload = {
         date: form.date,
         name: selectedCustomer?.name || form.name,
@@ -279,7 +282,8 @@ const calculateSilverValue = (form) => {
         shop:form.shop,
         entries: buildEntries()
       };
-
+      if (payload.entries.length==0) return alert("add entry");
+      setLoading(true); // 🔥 start loader
       if (isEditMode) {
       
         await updateLedger(id, payload);
