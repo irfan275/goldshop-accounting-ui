@@ -11,7 +11,7 @@ import AddLedger from "./pages/AddLedger";
 
 function App() {
   return (
-    <BrowserRouter basename="/app2">
+    <BrowserRouter >
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
