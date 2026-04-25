@@ -5,7 +5,7 @@ import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../
 import { getCustomers } from "../services/customerService";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { getShops } from "../services/userService";
+import { getBanks, getShops } from "../services/userService";
 
 export default function AddLedger() {
   const { id } = useParams();
@@ -17,7 +17,8 @@ export default function AddLedger() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [loading, setLoading] = useState(false);
-    const [shops, setShops] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [banks, setBanks] = useState([]);
 
   const emptyEntry = {
   credit: "",
@@ -36,8 +37,39 @@ export default function AddLedger() {
     gold_bar_1tt: emptyEntry,
     silver_raw: emptyEntry,
     silver_bar_kg: emptyEntry,
-    bank: emptyEntry
+    bank: {}
   });
+  useEffect(() => {
+  async function fetchBanks() {
+    const res = await getBanks(); // your API
+    setBanks(res.data.data);
+
+    // initialize form structure
+    const initialBankState = {};
+    res.data.data.forEach(b => {
+      initialBankState[b.code] = { credit: "", debit: "" };
+    });
+
+    setForm(prev => ({
+      ...prev,
+      bank: initialBankState
+    }));
+  }
+
+  fetchBanks();
+}, []);
+const handleBankChange = (bankCode, field, value) => {
+  setForm(prev => ({
+    ...prev,
+    bank: {
+      ...prev.bank,
+      [bankCode]: {
+        ...prev.bank[bankCode],
+        [field]: value
+      }
+    }
+  }));
+};
     useEffect(() => {
       fetchShops();
     }, []);
@@ -134,7 +166,7 @@ export default function AddLedger() {
       gold_bar_1tt: { ...emptyEntry },
       silver_raw: { ...emptyEntry },
       silver_bar_kg: { ...emptyEntry },
-      bank: { ...emptyEntry }
+      //bank: { ...emptyEntry }
     };
 
     inv.entries.forEach((e) => {
@@ -145,6 +177,11 @@ export default function AddLedger() {
         value: e.value || 0
       };
 
+      if (e.type.startsWith("bank_")) {
+        newForm.bank = newForm.bank || {};
+        newForm.bank[e.type] = mapped;
+        return;
+      }
       switch (e.type) {
         case "cash":
           newForm.cash = mapped;
@@ -168,9 +205,9 @@ export default function AddLedger() {
           newForm.silver_bar_kg = mapped;
           break;
 
-        case "bank":
-          newForm.bank = mapped;
-          break;
+        // case "bank":
+        //   newForm.bank = mapped;
+        //   break;
 
         default:
           break;
@@ -262,7 +299,21 @@ const calculateSilverValue = (form) => {
     pushIf("gold_bar", form.gold_bar_1tt, { subType: "1tt" });
     pushIf("silver_raw", form.silver_raw);
     pushIf("silver_bar", form.silver_bar_kg, { subType: "kg" });
-    pushIf("bank", form.bank);
+    //pushIf("bank", form.bank);
+    // ✅ dynamic banks
+  Object.keys(form.bank || {}).forEach((bankKey) => {
+    const bankData = form.bank[bankKey];
+
+    if (bankData && (bankData.credit || bankData.debit)) {
+      entries.push({
+        type: bankKey, // 👈 "bank_muscat", "bank_nbo"
+        credit: Number(bankData.credit || 0),
+        debit: Number(bankData.debit || 0),
+        rate: 0,
+        value: 0
+      });
+    }
+  });
 
     return entries;
   };
@@ -788,7 +839,7 @@ const calculateSilverValue = (form) => {
         </div>
       </div>
       {/* ===== BANK ===== */}
-      <div className="card mb-3">
+      {/* <div className="card mb-3">
         <div className="card-header bg-info">🏦 Bank</div>
         <div className="card-body row">
           <div className="col-md-6">
@@ -808,7 +859,45 @@ const calculateSilverValue = (form) => {
             />
           </div>
         </div>
-      </div>
+      </div> */}
+      <div className="card mb-3">
+          <div className="card-header bg-info">🏦 Banks</div>
+          <div className="card-body">
+
+            {banks.map((bank) => (
+              <div key={bank.code} className="row mb-2 align-items-center">
+
+                <div className="col-md-3">
+                  <strong>{bank.name}</strong>
+                </div>
+
+                <div className="col-md-4">
+                  <input
+                    className="form-control"
+                    placeholder="Credit"
+                    value={form.bank?.[bank.code]?.credit || ""}
+                    onChange={(e) =>
+                      handleBankChange(bank.code, "credit", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <input
+                    className="form-control"
+                    placeholder="Debit"
+                    value={form.bank?.[bank.code]?.debit || ""}
+                    onChange={(e) =>
+                      handleBankChange(bank.code, "debit", e.target.value)
+                    }
+                  />
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
         {loading && (
           <div className="overlay-loader">
             <div className="spinner-border text-light" role="status">

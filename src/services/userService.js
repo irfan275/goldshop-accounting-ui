@@ -24,3 +24,6 @@ export const getShops = async () => {
 export const getShopById = async (id) => {
   return api.get(`shop/${id}`);
 };
+export const getBanks = async () => {
+  return api.get('bank');
+};
