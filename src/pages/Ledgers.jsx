@@ -31,6 +31,7 @@ function Ledgers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [balance, setBalance] = useState(null);
   const [ledgers, setLedgers] = useState([]);
+  const [showBanks, setShowBanks] = useState(false);
 
   // ---------------- LOAD LEDGERS ----------------
   useEffect(() => {
@@ -116,13 +117,241 @@ function Ledgers() {
   };
 
 
+// const handleExport = async () => {
+//   const workbook = new ExcelJS.Workbook();
+//   const sheet = workbook.addWorksheet("Ledger");
+
+//   const totalColumns = 16;
+
+//   // ===== BORDER STYLE =====
+//   const thinBorder = {
+//     top: { style: "thin", color: { argb: "FF999999" } },
+//     left: { style: "thin", color: { argb: "FF999999" } },
+//     bottom: { style: "thin", color: { argb: "FF999999" } },
+//     right: { style: "thin", color: { argb: "FF999999" } }
+//   };
+
+//   // ================= HEADER =================
+
+//   sheet.addRow([
+//     "Date", "Invoice", "Customer", "Description",
+//     "Gold", "", "TTB", "", "Silver", "", "KGB", "",
+//     "Cash", "", "Bank", ""
+//   ]);
+
+//   sheet.addRow([
+//     "", "", "", "",
+//     "Cr", "Dr",
+//     "Cr", "Dr",
+//     "Cr", "Dr",
+//     "Cr", "Dr",
+//     "Cr", "Dr",
+//     "Cr", "Dr"
+//   ]);
+
+//   // Merge header
+//   sheet.mergeCells("A1:A2");
+//   sheet.mergeCells("B1:B2");
+//   sheet.mergeCells("C1:C2");
+//   sheet.mergeCells("D1:D2");
+
+//   [
+//     ["E1","F1"], ["G1","H1"], ["I1","J1"],
+//     ["K1","L1"], ["M1","N1"], ["O1","P1"]
+//   ].forEach(([s, e]) => sheet.mergeCells(`${s}:${e}`));
+
+//   // Header style
+//   [1, 2].forEach(r => {
+//     sheet.getRow(r).eachCell(cell => {
+//       cell.font = { bold: true };
+//       cell.alignment = { horizontal: "center", vertical: "middle" };
+//       cell.border = thinBorder;
+//     });
+//   });
+
+//   sheet.views = [{ state: "frozen", ySplit: 2 }];
+
+//   // ================= DATA =================
+
+//   ledgers.forEach(item => {
+
+//     const row = sheet.addRow([
+//       item.date ? new Date(item.date).toLocaleDateString() : "",
+//       item.invoiceNumber,
+//       item.customer,
+//       item.description,
+
+//       item.gold?.credit || 0,
+//       item.gold?.debit || 0,
+
+//       item.ttb?.credit || 0,
+//       item.ttb?.debit || 0,
+
+//       item.silver?.credit || 0,
+//       item.silver?.debit || 0,
+
+//       item.silver_bar?.credit || 0,
+//       item.silver_bar?.debit || 0,
+
+//       item.cash?.credit || 0,
+//       item.cash?.debit || 0,
+
+//       item.bank?.credit || 0,
+//       item.bank?.debit || 0
+//     ]);
+
+//     // ===== ROW STYLING =====
+//     for (let i = 1; i <= totalColumns; i++) {
+//       const cell = row.getCell(i);
+
+//       cell.border = thinBorder;
+
+//       cell.alignment = {
+//         horizontal: i <= 4 ? "left" : "center",
+//         vertical: "middle"
+//       };
+
+//       if ([5,7,9,11,13,15].includes(i)) {
+//         cell.font = { color: { argb: "FF008000" } };
+//       }
+
+//       if ([6,8,10,12,14,16].includes(i)) {
+//         cell.font = { color: { argb: "FFFF0000" } };
+//       }
+
+//       if ([5,6,7,8].includes(i)) {
+//         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
+//       }
+
+//       if ([9,10,11,12].includes(i)) {
+//         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEBEEF0" } };
+//       }
+
+//       if ([13,14].includes(i)) {
+//         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEACAB3" } };
+//       }
+
+//       if ([15,16].includes(i)) {
+//         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF73A3E7" } };
+//       }
+//     }
+
+//     // ================= TOTAL =================
+//     if (item.isTotal) {
+//       for (let i = 1; i <= totalColumns; i++) {
+//         const cell = row.getCell(i);
+
+//         cell.font = { bold: true };
+//         cell.border = thinBorder;
+//         cell.fill = {
+//           type: "pattern",
+//           pattern: "solid",
+//           fgColor: { argb: "FFFFE699" }
+//         };
+//       }
+
+//       // ================= CLOSING BALANCE =================
+// const closingRow = sheet.addRow([
+//   "", "", "", "",
+//   item.gold?.closing || 0, item.gold?.closingDr || "",
+//   item.ttb?.closing || 0, item.ttb?.closingDr || "",
+//   item.silver?.closing || 0, item.silver?.closingDr || "",
+//   item.silver_bar?.closing || 0, item.silver_bar?.closingDr || "",
+//   item.cash?.closing || 0, item.cash?.closingDr || "",
+//   item.bank?.closing || 0, item.bank?.closingDr || ""
+// ]);
+
+// const r = closingRow.number;
+
+// // merge
+// sheet.mergeCells(`A${r}:C${r}`);
+// //closingRow.getCell(4).value = "Closing Balance";
+
+// // IMPORTANT: ONLY style first cell (A)
+// const cell = closingRow.getCell(4);
+
+// cell.value = "Closing Balance";
+// cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+// cell.fill = {
+//   type: "pattern",
+//   pattern: "solid",
+//   fgColor: { argb: "FF343A40" }
+// };
+
+// // THIS is the key fix
+// cell.alignment = {
+//   horizontal: "center",   // makes it appear centered across A-D
+//   vertical: "middle"
+// };
+
+// // borders for merged area
+// for (let i = 1; i <= 4; i++) {
+//   //closingRow.getCell(i).border = thinBorder;
+//   const cell = closingRow.getCell(i);
+
+//   cell.fill = {
+//     type: "pattern",
+//     pattern: "solid",
+//     fgColor: { argb: "FF343A40" }
+//   };
+
+//   cell.font = {
+//     bold: true,
+//     color: { argb: "FFFFFFFF" }
+//   };
+
+//   cell.alignment = {
+//     horizontal: "center",
+//     vertical: "middle"
+//   };
+
+//   cell.border = thinBorder;
+// }
+
+// // data columns styling
+// for (let i = 5; i <= totalColumns; i++) {
+//   const c = closingRow.getCell(i);
+
+//   c.font = { bold: true, color: { argb: "FFFFFFFF" } };
+//   c.fill = {
+//     type: "pattern",
+//     pattern: "solid",
+//     fgColor: { argb: "FF343A40" }
+//   };
+//   c.alignment = { horizontal: "center", vertical: "middle" };
+//   c.border = thinBorder;
+// }
+
+//     }
+//   });
+
+//   // ================= COLUMN WIDTH =================
+
+//   sheet.columns = [
+//     { width: 12 },
+//     { width: 12 },
+//     { width: 20 },
+//     { width: 40 },
+
+//     { width: 9 }, { width: 9 },
+//     { width: 9 }, { width: 9 },
+//     { width: 9 }, { width: 9 },
+//     { width: 9 }, { width: 9 },
+//     { width: 9 }, { width: 9 },
+//     { width: 9 }, { width: 9 }
+//   ];
+
+//   sheet.getColumn(4).alignment = { wrapText: true };
+
+//   // ================= EXPORT =================
+
+//   const buffer = await workbook.xlsx.writeBuffer();
+//   saveAs(new Blob([buffer]), "Ledger.xlsx");
+// };
 const handleExport = async () => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Ledger");
 
-  const totalColumns = 16;
-
-  // ===== BORDER STYLE =====
   const thinBorder = {
     top: { style: "thin", color: { argb: "FF999999" } },
     left: { style: "thin", color: { argb: "FF999999" } },
@@ -130,15 +359,25 @@ const handleExport = async () => {
     right: { style: "thin", color: { argb: "FF999999" } }
   };
 
-  // ================= HEADER =================
+  // ================= BANK DETECTION =================
+  const bankSet = new Set();
 
-  sheet.addRow([
+  ledgers.forEach(item => {
+    Object.keys(item || {}).forEach(k => {
+      if (k.startsWith("bank_")) bankSet.add(k);
+    });
+  });
+
+  const banks = Array.from(bankSet);
+
+  // ================= HEADER =================
+  const header1 = [
     "Date", "Invoice", "Customer", "Description",
     "Gold", "", "TTB", "", "Silver", "", "KGB", "",
-    "Cash", "", "Bank", ""
-  ]);
+    "Cash", "", "BANK TOTAL", ""
+  ];
 
-  sheet.addRow([
+  const header2 = [
     "", "", "", "",
     "Cr", "Dr",
     "Cr", "Dr",
@@ -146,20 +385,36 @@ const handleExport = async () => {
     "Cr", "Dr",
     "Cr", "Dr",
     "Cr", "Dr"
-  ]);
+  ];
 
-  // Merge header
+  banks.forEach(b => {
+    const name = b.replace("bank_", "").toUpperCase();
+    header1.push(name, "");
+    header2.push("Cr", "Dr");
+  });
+
+  sheet.addRow(header1);
+  sheet.addRow(header2);
+
+  // ================= MERGE HEADER =================
   sheet.mergeCells("A1:A2");
   sheet.mergeCells("B1:B2");
   sheet.mergeCells("C1:C2");
   sheet.mergeCells("D1:D2");
 
-  [
-    ["E1","F1"], ["G1","H1"], ["I1","J1"],
-    ["K1","L1"], ["M1","N1"], ["O1","P1"]
-  ].forEach(([s, e]) => sheet.mergeCells(`${s}:${e}`));
+  let col = 5;
 
-  // Header style
+  for (let i = 0; i < 6; i++) {
+    sheet.mergeCells(1, col, 1, col + 1);
+    col += 2;
+  }
+
+  banks.forEach(() => {
+    sheet.mergeCells(1, col, 1, col + 1);
+    col += 2;
+  });
+
+  // ================= HEADER STYLE =================
   [1, 2].forEach(r => {
     sheet.getRow(r).eachCell(cell => {
       cell.font = { bold: true };
@@ -171,10 +426,17 @@ const handleExport = async () => {
   sheet.views = [{ state: "frozen", ySplit: 2 }];
 
   // ================= DATA =================
-
   ledgers.forEach(item => {
 
-    const row = sheet.addRow([
+    let bankCr = 0;
+    let bankDr = 0;
+
+    banks.forEach(b => {
+      bankCr += Number(item[b]?.credit || 0);
+      bankDr += Number(item[b]?.debit || 0);
+    });
+
+    const rowData = [
       item.date ? new Date(item.date).toLocaleDateString() : "",
       item.invoiceNumber,
       item.customer,
@@ -195,158 +457,149 @@ const handleExport = async () => {
       item.cash?.credit || 0,
       item.cash?.debit || 0,
 
-      item.bank?.credit || 0,
-      item.bank?.debit || 0
-    ]);
+      bankCr,
+      bankDr
+    ];
 
-    // ===== ROW STYLING =====
-    for (let i = 1; i <= totalColumns; i++) {
-      const cell = row.getCell(i);
+    banks.forEach(b => {
+      rowData.push(
+        item[b]?.credit || 0,
+        item[b]?.debit || 0
+      );
+    });
 
+    const row = sheet.addRow(rowData);
+
+    row.eachCell(cell => {
       cell.border = thinBorder;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    });
 
-      cell.alignment = {
-        horizontal: i <= 4 ? "left" : "center",
-        vertical: "middle"
-      };
-
-      if ([5,7,9,11,13,15].includes(i)) {
-        cell.font = { color: { argb: "FF008000" } };
-      }
-
-      if ([6,8,10,12,14,16].includes(i)) {
-        cell.font = { color: { argb: "FFFF0000" } };
-      }
-
-      if ([5,6,7,8].includes(i)) {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
-      }
-
-      if ([9,10,11,12].includes(i)) {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEBEEF0" } };
-      }
-
-      if ([13,14].includes(i)) {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEACAB3" } };
-      }
-
-      if ([15,16].includes(i)) {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF73A3E7" } };
-      }
-    }
-
-    // ================= TOTAL =================
+    // ================= TOTAL ROW =================
     if (item.isTotal) {
-      for (let i = 1; i <= totalColumns; i++) {
-        const cell = row.getCell(i);
-
+      row.eachCell(cell => {
         cell.font = { bold: true };
-        cell.border = thinBorder;
         cell.fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: "FFFFE699" }
         };
+      });
+
+      // ================= CLOSING ROW =================
+      const closingData = [
+        "", "", "", "Closing Balance",
+
+        item.gold?.closing || 0,
+        item.gold?.closingDr || "",
+
+        item.ttb?.closing || 0,
+        item.ttb?.closingDr || "",
+
+        item.silver?.closing || 0,
+        item.silver?.closingDr || "",
+
+        item.silver_bar?.closing || 0,
+        item.silver_bar?.closingDr || "",
+
+        item.cash?.closing || 0,
+        item.cash?.closingDr || "",
+
+        item.bank?.closing || 0,
+        item.bank?.closingDr || ""
+      ];
+
+      banks.forEach(b => {
+        closingData.push(
+          item[b]?.closing || 0,
+          item[b]?.closingDr || ""
+        );
+      });
+
+      const closingRow = sheet.addRow(closingData);
+      const r = closingRow.number;
+
+      // ================= FIXED ALIGNMENT + COLOR =================
+
+      sheet.mergeCells(`A${r}:D${r}`);
+
+      // style merged area A-D properly
+      for (let i = 1; i <= 4; i++) {
+        const cell = sheet.getCell(r, i);
+
+        cell.value = i === 4 ? "Closing Balance" : "";
+
+        cell.font = {
+          bold: true,
+          color: { argb: "FFFFFFFF" }
+        };
+
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF343A40" }
+        };
+
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle"
+        };
+
+        cell.border = thinBorder;
       }
 
-      // ================= CLOSING BALANCE =================
-const closingRow = sheet.addRow([
-  "", "", "", "",
-  item.gold?.closing || 0, item.gold?.closingDr || "",
-  item.ttb?.closing || 0, item.ttb?.closingDr || "",
-  item.silver?.closing || 0, item.silver?.closingDr || "",
-  item.silver_bar?.closing || 0, item.silver_bar?.closingDr || "",
-  item.cash?.closing || 0, item.cash?.closingDr || "",
-  item.bank?.closing || 0, item.bank?.closingDr || ""
-]);
+      // style data columns
+      for (let i = 5; i <= closingData.length; i++) {
+        const cell = sheet.getCell(r, i);
 
-const r = closingRow.number;
+        cell.font = {
+          bold: true,
+          color: { argb: "FFFFFFFF" }
+        };
 
-// merge
-sheet.mergeCells(`A${r}:C${r}`);
-//closingRow.getCell(4).value = "Closing Balance";
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF343A40" }
+        };
 
-// IMPORTANT: ONLY style first cell (A)
-const cell = closingRow.getCell(4);
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle"
+        };
 
-cell.value = "Closing Balance";
-cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-cell.fill = {
-  type: "pattern",
-  pattern: "solid",
-  fgColor: { argb: "FF343A40" }
-};
-
-// THIS is the key fix
-cell.alignment = {
-  horizontal: "center",   // makes it appear centered across A-D
-  vertical: "middle"
-};
-
-// borders for merged area
-for (let i = 1; i <= 4; i++) {
-  //closingRow.getCell(i).border = thinBorder;
-  const cell = closingRow.getCell(i);
-
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF343A40" }
-  };
-
-  cell.font = {
-    bold: true,
-    color: { argb: "FFFFFFFF" }
-  };
-
-  cell.alignment = {
-    horizontal: "center",
-    vertical: "middle"
-  };
-
-  cell.border = thinBorder;
-}
-
-// data columns styling
-for (let i = 5; i <= totalColumns; i++) {
-  const c = closingRow.getCell(i);
-
-  c.font = { bold: true, color: { argb: "FFFFFFFF" } };
-  c.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF343A40" }
-  };
-  c.alignment = { horizontal: "center", vertical: "middle" };
-  c.border = thinBorder;
-}
-
+        cell.border = thinBorder;
+      }
     }
   });
 
   // ================= COLUMN WIDTH =================
-
-  sheet.columns = [
+  const columns = [
     { width: 12 },
     { width: 12 },
     { width: 20 },
-    { width: 40 },
-
-    { width: 9 }, { width: 9 },
-    { width: 9 }, { width: 9 },
-    { width: 9 }, { width: 9 },
-    { width: 9 }, { width: 9 },
-    { width: 9 }, { width: 9 },
-    { width: 9 }, { width: 9 }
+    { width: 40 }
   ];
+
+  for (let i = 0; i < 6; i++) {
+    columns.push({ width: 9 }, { width: 9 });
+  }
+
+  banks.forEach(() => {
+    columns.push({ width: 9 }, { width: 9 });
+  });
+
+  sheet.columns = columns;
 
   sheet.getColumn(4).alignment = { wrapText: true };
 
   // ================= EXPORT =================
-
   const buffer = await workbook.xlsx.writeBuffer();
   saveAs(new Blob([buffer]), "Ledger.xlsx");
 };
+const bankEntries = Object.entries(balance || {}).filter(([k]) =>
+  k.startsWith("bank_")
+);
   return (
     <div className="container mt-3">
 
@@ -376,64 +629,126 @@ for (let i = 5; i <= totalColumns; i++) {
 
 </div>
       {balance && (
-        <div className="row mb-3">
+        <div>
+          <div className="row mb-3">
 
-          {/* GOLD */}
-          <div className="col-md-2">
-            <div className="card shadow border-0 bg-warning text-dark">
-              <div className="card-body text-center">
-                <h6 className="mb-1">🪙 Gold (g)</h6>
-                <h4 className="mb-0">{balance.gold_raw}</h4>
+            {/* GOLD */}
+            <div className="col-md-2">
+              <div className="card shadow border-0 bg-warning text-dark">
+                <div className="card-body text-center">
+                  <h6 className="mb-1">🪙 Gold (g)</h6>
+                  <h4 className="mb-0">{balance.gold_raw}</h4>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* TTB */}
-          <div className="col-md-2">
-            <div className="card shadow border-0 bg-info text-white">
-              <div className="card-body text-center">
-                <h6 className="mb-1">🪙 TTB</h6>
-                <h4 className="mb-0">{balance.gold_bar}</h4>
+            {/* TTB */}
+            <div className="col-md-2">
+              <div className="card shadow border-0 bg-info text-white">
+                <div className="card-body text-center">
+                  <h6 className="mb-1">🪙 TTB</h6>
+                  <h4 className="mb-0">{balance.gold_bar}</h4>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="col-md-2">
-            <div className="card shadow border-0 bg-primary   text-dark">
-              <div className="card-body text-center">
-                <h6 className="mb-1">⚪ Silver (g)</h6>
-                <h4 className="mb-0">{balance.silver_raw}</h4>
+            <div className="col-md-2">
+              <div className="card shadow border-0 bg-primary   text-dark">
+                <div className="card-body text-center">
+                  <h6 className="mb-1">⚪ Silver (g)</h6>
+                  <h4 className="mb-0">{balance.silver_raw}</h4>
+                </div>
               </div>
             </div>
-          </div>
-          {/* TTB */}
-          <div className="col-md-2">
-            <div className="card shadow border-0 bg-info text-white">
-              <div className="card-body text-center">
-                <h6 className="mb-1">⬜ S-KGB</h6>
-                <h4 className="mb-0">{balance.silver_bar}</h4>
+            {/* TTB */}
+            <div className="col-md-2">
+              <div className="card shadow border-0 bg-info text-white">
+                <div className="card-body text-center">
+                  <h6 className="mb-1">⬜ S-KGB</h6>
+                  <h4 className="mb-0">{balance.silver_bar}</h4>
+                </div>
               </div>
             </div>
-          </div>
-          {/* CASH */}
-          <div className="col-md-2">
-            <div className="card shadow border-0 bg-success text-white">
-              <div className="card-body text-center">
-                <h6 className="mb-1">💰 Cash</h6>
-                <h4 className="mb-0">{balance.cash}</h4>
+            {/* CASH */}
+            <div className="col-md-2">
+              <div className="card shadow border-0 bg-success text-white">
+                <div className="card-body text-center">
+                  <h6 className="mb-1">💰 Cash</h6>
+                  <h4 className="mb-0">{balance.cash}</h4>
+                </div>
               </div>
             </div>
-          </div>
-          {/* BANK */}
-          <div className="col-md-2">
-            <div className="card shadow border-0 bg-primary text-white">
-              <div className="card-body text-center">
-                <h6 className="mb-1">🏦 Bank</h6>
-                <h4 className="mb-0">{balance.bank}</h4>
+            {/* BANK */}
+            <div className="col-md-2">
+              <div className="card shadow border-0 bg-primary text-white">
+                <div className="card-body text-center">
+                  <h6 className="mb-1">🏦 Bank</h6>
+                  <h4 className="mb-0">{balance.bank}</h4>
+                </div>
               </div>
             </div>
-          </div>
 
+          </div>
+          <div className="col-12 mb-2">
+  <button
+    className={`btn w-100 d-flex justify-content-between align-items-center shadow-sm ${
+      showBanks ? "btn-info text-white" : "btn-light"
+    }`}
+    style={{
+      border: "1px solid #dee2e6",
+      padding: "10px 14px",
+      fontWeight: "500",
+      transition: "all 0.2s ease"
+    }}
+    onClick={() => setShowBanks(!showBanks)}
+  >
+    {/* LEFT */}
+    <div className="d-flex align-items-center gap-2">
+      <span style={{ fontSize: "18px" }}>🏦</span>
+      <span>Bank Details</span>
+    </div>
+
+    {/* RIGHT */}
+    <div className="d-flex align-items-center gap-2">
+      <span style={{ fontSize: "13px" }}>
+        {showBanks ? "Collapse" : "Expand"}
+      </span>
+
+      <span
+        style={{
+          fontSize: "18px",
+          transition: "transform 0.25s ease",
+          transform: showBanks ? "rotate(180deg)" : "rotate(0deg)"
+        }}
+      >
+        ⌄
+      </span>
+    </div>
+  </button>
+</div>
+          {showBanks && (
+  <div className="row">
+    {Object.entries(balance)
+      .filter(([k]) => k.startsWith("bank_"))
+      .map(([key, value]) => {
+        const name = key.replace("bank_", "").toUpperCase();
+
+        return (
+          <div className="col-md-2 col-6 mb-2" key={key}>
+            <div className="card border-0 bg-primary text-white shadow-sm">
+              <div className="card-body text-center p-2">
+                <div style={{ fontSize: "12px" }}>🏦 {name}</div>
+                <div style={{ fontSize: "16px", fontWeight: "bold" }}>
+                  {value}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+  </div>
+)}
         </div>
+        
       )}
       {/* FILTERS */}
       <div className="row g-2 mb-3">
