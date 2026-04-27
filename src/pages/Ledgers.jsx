@@ -115,7 +115,10 @@ function Ledgers() {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString();
   };
-
+const getFileTimestamp = () => {
+  const now = new Date();
+  return now.toISOString().replace(/[:.]/g, "-").slice(0, 19);
+};
 
 // const handleExport = async () => {
 //   const workbook = new ExcelJS.Workbook();
@@ -595,7 +598,7 @@ const handleExport = async () => {
 
   // ================= EXPORT =================
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), "Ledger.xlsx");
+  saveAs(new Blob([buffer]), `Ledger_${getFileTimestamp()}.xlsx`);
 };
 const bankEntries = Object.entries(balance || {}).filter(([k]) =>
   k.startsWith("bank_")
@@ -938,12 +941,12 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td>
 
                     {/* BANK */}
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat.debit || 0}</td>
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo.debit || 0}</td>
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank.debit || 0}</td>
+                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.debit || 0}</td>
+                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
+                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
 
                     {/* ACTION */}
                     <td>
@@ -956,12 +959,12 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                             Edit
                           </button>
 
-                          <button
+                          {/* <button
                             className="btn btn-sm btn-danger"
                             onClick={() => handleDelete(item._id)}
                           >
                             Delete
-                          </button>
+                          </button> */}
                         </>
                       )}
                     </td>
@@ -983,8 +986,8 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                       <td colSpan="2">{item.silver.closing || 0}</td>
                       <td colSpan="2">{item.silver_bar.closing || 0}</td>
                       <td colSpan="2">{item.cash.closing || 0}</td>
-                      <td colSpan="2">{item.bank_muscat.closing || 0}</td>
-                      <td colSpan="2">{item.bank_nbo.closing || 0}</td>
+                      <td colSpan="2">{item.bank_muscat?.closing || 0}</td>
+                      <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
                       <td colSpan="2">{item.bank.closing || 0}</td>
 
                       <td></td>
