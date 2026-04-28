@@ -8,6 +8,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import Unauthorized from "./pages/UnAuthorized";
 import Ledgers from "./pages/Ledgers";
 import AddLedger from "./pages/AddLedger";
+import PurchaseLedgers from "./pages/PurchaseLedgers";
+import AddPurchaseLedger from "./pages/AddPurchaseLedger";
 
 function App() {
   return (
@@ -19,11 +21,14 @@ function App() {
         <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           {/* <Route path="dashboard" element={<Dashboard />} /> */}
           <Route path="customers" element={<ProtectedRoute ><Customers /></ProtectedRoute>} />
-          <Route path="ledgers" element={<ProtectedRoute><Ledgers /></ProtectedRoute>} />
           <Route path="users" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN","ADMIN"]}><Users /></ProtectedRoute>} />
+          <Route path="ledgers" element={<ProtectedRoute><Ledgers /></ProtectedRoute>} />
           <Route path="/ledgers/add" element={<ProtectedRoute>< AddLedger/></ProtectedRoute>} />
-          {/* <Route path="/invoice/view/:id" element={<ProtectedRoute><ViewInvoice /></ProtectedRoute>} /> */}
           <Route path="/ledgers/edit/:id" element={<ProtectedRoute><AddLedger /></ProtectedRoute>} />
+
+          <Route path="purchaseLedger" element={<ProtectedRoute><PurchaseLedgers /></ProtectedRoute>} />
+          <Route path="/purchaseLedger/add" element={<ProtectedRoute>< AddPurchaseLedger/></ProtectedRoute>} />
+          <Route path="/purchaseLedger/edit/:id" element={<ProtectedRoute><AddPurchaseLedger /></ProtectedRoute>} />
 
           {/* <Route path="goldreceive" element={<ProtectedRoute><GoldReceive /></ProtectedRoute>} />
           <Route path="goldreceive/add" element={<ProtectedRoute>< AddGoldReceiveInvoice/></ProtectedRoute>} />

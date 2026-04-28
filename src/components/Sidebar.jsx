@@ -35,17 +35,17 @@ function Sidebar() {
             Ledger
           </NavLink>
         </li>
-        {/* <li>
+        <li>
           <NavLink
-            to="/goldreceive"
+            to="/purchaseLedger"
             className={({ isActive }) =>
               "menu-link" + (isActive ? " active" : "")
             }
           >
             <FaFileInvoice className="menu-icon" />
-            Gold Receive
+            Purchase Ledger
           </NavLink>
-        </li> */}
+        </li>
 
           {user?.role !== "EMPLOYEE" && (
         <li>

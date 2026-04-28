@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../services/ledgerService";
+import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../services/purchaseLedgerService";
 import { getCustomers } from "../services/customerService";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getBanks, getShops } from "../services/userService";
 
-export default function AddLedger() {
+export default function AddPurchaseLedger() {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
@@ -31,8 +31,6 @@ export default function AddLedger() {
     name: "",
     description: "",
     shop: "",
-    isOfficial: true,
-    isBooking : false,
     cash: emptyEntry,
     gold_raw: emptyEntry,
     gold_bar_1tt: emptyEntry,
@@ -161,8 +159,6 @@ const handleBankChange = (bankCode, field, value) => {
       custId : inv.custId || "",
       description: inv.description || "",
       shop: inv.shop || "",
-      isOfficial : inv.isOfficial,
-      isBooking : inv.isBooking,
 
       cash: { ...emptyEntry },
       gold_raw: { ...emptyEntry },
@@ -220,46 +216,7 @@ const handleBankChange = (bankCode, field, value) => {
     setInvoiceNumber(inv.invoiceNumber)
     setInvoiceId(inv._id);
 };
-// useEffect(() => {
-//   const total = calculateGoldValue(form);
 
-//   setForm((prev) => ({
-//     ...prev,
-//     goldValue: total
-//   }));
-// }, [
-//   form.gold_raw,
-//   form.gold_bar_1tt,
-//   form.goldRate
-// ]);
-const TTB_GRAMS = 116.64;
-
-const calculateGoldValue = (form) => {
-  const raw =
-    (form.gold_raw.credit || 0) - (form.gold_raw.debit || 0);
-
-  const bar =
-    (form.gold_bar_1tt.credit || 0) -
-    (form.gold_bar_1tt.debit || 0);
-
-  const totalGrams = raw + bar * TTB_GRAMS;
-
-  return totalGrams * (form.goldRate || 0);
-};
-const SILVER_BAR_GRAMS = 1000; // 1 KG = 1000 grams
-
-const calculateSilverValue = (form) => {
-  const raw =
-    (form.silver_raw.credit || 0) - (form.silver_raw.debit || 0);
-
-  const bar =
-    (form.silver_bar_kg.credit || 0) -
-    (form.silver_bar_kg.debit || 0);
-
-  const totalGrams = raw + bar * SILVER_BAR_GRAMS;
-
-  return totalGrams * (form.silverRate || 0);
-};
   const handleChange = (section, field, value) => {
     setForm({
       ...form,
@@ -321,8 +278,6 @@ const calculateSilverValue = (form) => {
         name: selectedCustomer?.name || form.name,
         custId: selectedCustomer?._id || form.custId,
         description: form.description,
-        isOfficial : form.isOfficial,
-        isBooking : form.isBooking,
         shop:form.shop,
         entries: buildEntries()
       };
@@ -341,7 +296,7 @@ const calculateSilverValue = (form) => {
         alert("Ledger created");
 
       }
-      navigate("/ledgers");
+      navigate("/purchaseLedger");
     }catch (error) {
         console.error(error);
         alert("Something went wrong");
@@ -358,7 +313,7 @@ const calculateSilverValue = (form) => {
   {/* ===== CARD ===== */}
   <div className="card shadow">
     <div className="card-header bg-primary text-white">
-      <h3>{isEditMode ? "Edit Ledger" : "Create Ledger"}</h3>
+      <h3>{isEditMode ? "Edit Purchase Ledger" : "Create Purchase Ledger"}</h3>
       {invoiceNumber && (
         <div className="row mb-3">
           <div className="col-md-6">
@@ -464,62 +419,6 @@ const calculateSilverValue = (form) => {
     />
   </div>
 
-  {/* Status */}
-  <div className="col-md-3">
-    <label className="form-label">Status</label>
-
-    <div className="d-flex align-items-center gap-4 mt-">
-
-      <div className="form-check form-switch m-0">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          style={{ transform: "scale(1.5)", transformOrigin: "left center" }}
-          checked={form.isOfficial || false}
-          onChange={(e) =>
-            setForm({ ...form, isOfficial: e.target.checked })
-          }
-        />
-      </div>
-
-      <span
-        className={`badge ${
-          form.isOfficial ? "bg-success" : "bg-danger"
-        }`}
-      >
-        {form.isOfficial ? "Official" : "Unofficial"}
-      </span>
-
-    </div>
-  </div>
-  {/* Booking */}
-  <div className="col-md-3">
-    <label className="form-label">Booking</label>
-
-    <div className="d-flex align-items-center gap-4 mt-">
-
-      <div className="form-check form-switch m-0">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          style={{ transform: "scale(1.5)", transformOrigin: "left center" }}
-          checked={form.isBooking || false}
-          onChange={(e) =>
-            setForm({ ...form, isBooking: e.target.checked })
-          }
-        />
-      </div>
-
-      <span
-        className={`badge ${
-          form.isBooking ? "bg-success" : "bg-danger"
-        }`}
-      >
-        {form.isBooking ? "Yes" : "No"}
-      </span>
-
-    </div>
-  </div>
 
 </div>
 
@@ -531,28 +430,6 @@ const calculateSilverValue = (form) => {
   <div className="card-header bg-warning d-flex justify-content-between align-items-center">
     <strong>🪙 Gold</strong>
 
-    {/* <div className="d-flex gap-2">
-      <input
-        type="number"
-        className="form-control form-control-sm"
-        style={{ width: "120px" }}
-        placeholder="Rate/g"
-        value={form.gold_raw.rate}
-        onChange={(e) =>
-          handleChange("gold_raw", "rate", e.target.value)
-        }
-      />
-
-      <input
-        className="form-control form-control-sm"
-        style={{ width: "150px" }}
-        value={form.gold_raw.value}
-        placeholder="Total Price"
-        onChange={(e) =>
-          handleChange("gold_raw", "value", e.target.value)
-        }
-      />
-    </div> */}
   </div>
 
   {/* BODY */}
@@ -859,28 +736,6 @@ const calculateSilverValue = (form) => {
           </div>
         </div>
       </div>
-      {/* ===== BANK ===== */}
-      {/* <div className="card mb-3">
-        <div className="card-header bg-info">🏦 Bank</div>
-        <div className="card-body row">
-          <div className="col-md-6">
-            <input
-              className="form-control"
-              placeholder="Credit"
-              value={form.bank.credit}
-              onChange={(e) => handleChange("bank", "credit", e.target.value)}
-            />
-          </div>
-          <div className="col-md-6">
-            <input
-              className="form-control"
-              placeholder="Debit"
-              value={form.bank.debit}
-              onChange={(e) => handleChange("bank", "debit", e.target.value)}
-            />
-          </div>
-        </div>
-      </div> */}
       <div className="card mb-3">
           <div className="card-header bg-info">🏦 Banks</div>
           <div className="card-body">
@@ -937,55 +792,6 @@ const calculateSilverValue = (form) => {
       </div>
     </div>
   </div>
-
-  {/* ===== PREVIEW TABLE ===== */}
-  {/* <div className="card shadow mt-4">
-    <div className="card-header bg-dark text-white">
-      Preview
-    </div>
-
-    <div className="card-body table-responsive">
-      <table className="table table-bordered table-striped text-center">
-        <thead className="table-dark">
-          <tr>
-            <th>Date</th>
-            <th>Name</th>
-            <th>Cash</th>
-            <th>Gold (g)</th>
-            <th>TTB</th>
-            <th>Bank</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr>
-            <td>{form.date}</td>
-            <td>{customerSearch || form.name}</td>
-
-            <td>
-              <span className="text-success">C: {form.cash.credit || 0}</span> /
-              <span className="text-danger"> D: {form.cash.debit || 0}</span>
-            </td>
-
-            <td>
-              <span className="text-success">C: {form.gold_raw.credit || 0}</span> /
-              <span className="text-danger"> D: {form.gold_raw.debit || 0}</span>
-            </td>
-
-            <td>
-              <span className="text-success">C: {form.gold_bar_1tt.credit || 0}</span> /
-              <span className="text-danger"> D: {form.gold_bar_1tt.debit || 0}</span>
-            </td>
-
-            <td>
-              <span className="text-success">C: {form.bank.credit || 0}</span> /
-              <span className="text-danger"> D: {form.bank.debit || 0}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div> */}
 
 </div>
   );
