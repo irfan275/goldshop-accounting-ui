@@ -865,6 +865,8 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th colSpan="2">Bank Muscat</th>
                 <th colSpan="2">Bank NBO</th>
                 <th colSpan="2">Bank</th>
+                <th rowSpan="2">Type</th>
+                <th rowSpan="2">Status</th>
 
                 <th rowSpan="2" style={{width:'10%'}}>Action</th>
               </tr>
@@ -904,7 +906,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 rows.push(
                   <tr
                     key={item._id || index}
-                    className={isTotal ? "table-warning fw-bold" : !item.isOfficial? "table-danger":""}
+                    className={isTotal ? "table-warning fw-bold" :""}
                   >
 
                     {/* DATE */}
@@ -947,6 +949,18 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
+
+                    <td>
+                      <span className={`badge ${item.isOfficial ? "bg-success" : "bg-secondary"}`}>
+                        {item.isOfficial ? "Official" : "Unofficial"}
+                      </span>
+                    </td>
+
+                    <td>
+                      {item.isBooking && (
+                        <span className="badge bg-info text-dark">Booked</span>
+                      )}
+                    </td>
 
                     {/* ACTION */}
                     <td>

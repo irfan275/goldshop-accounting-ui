@@ -46,6 +46,17 @@ function Sidebar() {
             Purchase Ledger
           </NavLink>
         </li>
+         <li>
+          <NavLink
+            to="/statement"
+            className={({ isActive }) =>
+              "menu-link" + (isActive ? " active" : "")
+            }
+          >
+            <FaFileInvoice className="menu-icon" />
+            Statement
+          </NavLink>
+        </li>
 
           {user?.role !== "EMPLOYEE" && (
         <li>

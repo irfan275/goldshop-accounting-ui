@@ -10,6 +10,7 @@ import Ledgers from "./pages/Ledgers";
 import AddLedger from "./pages/AddLedger";
 import PurchaseLedgers from "./pages/PurchaseLedgers";
 import AddPurchaseLedger from "./pages/AddPurchaseLedger";
+import Statement from "./pages/Statement";
 
 function App() {
   return (
@@ -30,9 +31,9 @@ function App() {
           <Route path="/purchaseLedger/add" element={<ProtectedRoute>< AddPurchaseLedger/></ProtectedRoute>} />
           <Route path="/purchaseLedger/edit/:id" element={<ProtectedRoute><AddPurchaseLedger /></ProtectedRoute>} />
 
-          {/* <Route path="goldreceive" element={<ProtectedRoute><GoldReceive /></ProtectedRoute>} />
-          <Route path="goldreceive/add" element={<ProtectedRoute>< AddGoldReceiveInvoice/></ProtectedRoute>} />
-          <Route path="/goldreceive/edit/:id" element={<ProtectedRoute><AddGoldReceiveInvoice /></ProtectedRoute>} /> */}
+          <Route path="statement" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
+
+         
         </Route>
       </Routes>
     </BrowserRouter>

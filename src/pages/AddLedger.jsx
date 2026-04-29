@@ -466,7 +466,7 @@ const calculateSilverValue = (form) => {
 
   {/* Status */}
   <div className="col-md-3">
-    <label className="form-label">Status</label>
+    <label className="form-label">Type</label>
 
     <div className="d-flex align-items-center gap-4 mt-">
 
