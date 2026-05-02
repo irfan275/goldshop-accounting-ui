@@ -5,6 +5,7 @@ function Login() {
 
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOTP] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -19,7 +20,8 @@ function Login() {
         },
         body: JSON.stringify({
           phoneNumber,
-          password
+          password,
+          otp
         })
       });
 
@@ -74,6 +76,17 @@ function Login() {
               placeholder="Enter password"
               value={password}
               onChange={(e)=>setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label>OTP</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Enter password"
+              value={otp}
+              onChange={(e)=>setOTP(e.target.value)}
               required
             />
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUsers, createUser, updateUser, deleteUser, getShops } from "../services/userService";
+import { getUsers, createUser, updateUser, deleteUser, getShops, createSecret, getSecret } from "../services/userService";
 
 function Users() {
   const [users, setUsers] = useState([]);
@@ -80,6 +80,27 @@ function Users() {
       }
     }
   };
+  const generateSecret = async (user) => {
+    if (window.confirm(`Are you sure to generate for user ${user.name}?`)) {
+      try {
+        await createSecret(user._id);
+        alert("User secret generated successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to generate secret for user.");
+      }
+    }
+  };
+  const showSecret = async (id) => {
+      try {
+        const data = await getSecret(id);
+        alert("secret : " + data.data.secret);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to show secret");
+      }
+    
+  };
 
   return (
     <div className="container mt-3">
@@ -114,7 +135,9 @@ function Users() {
               <td>{u.role}</td>
               <td>{u.shopId?.name || "-"}</td>
               <td>
-                <button className="btn btn-sm btn-warning me-2" onClick={() => openEditModal(u)}>Edit</button>
+                <button className="btn btn-sm btn-info me-2" onClick={() => openEditModal(u)}>Edit</button>
+                <button className="btn btn-sm btn-warning me-2" onClick={() => generateSecret(u)}>Generate</button>
+                <button className="btn btn-sm btn-primary me-2" onClick={() => showSecret(u._id)}>Show</button>
                 <button className="btn btn-sm btn-danger" onClick={() => handleDelete(u._id)}>Delete</button>
               </td>
             </tr>

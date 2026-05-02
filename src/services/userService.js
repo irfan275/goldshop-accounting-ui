@@ -27,3 +27,10 @@ export const getShopById = async (id) => {
 export const getBanks = async () => {
   return api.get('bank');
 };
+
+export const createSecret = async (id) => {
+  return api.post(`${API_URL}/2fa/generate/${id}`);
+};
+export const getSecret = async (id) => {
+  return api.get(`${API_URL}/2fa/secret/${id}`);
+};

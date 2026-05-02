@@ -632,6 +632,13 @@ const handleExport = async () => {
 const bankEntries = Object.entries(balance || {}).filter(([k]) =>
   k.startsWith("bank_")
 );
+const formatAmount = (value, decimals = 3) => {
+  const num = Number(value);
+
+  if (isNaN(num)) return "0.000";
+
+  return num.toFixed(decimals);
+};
   return (
     <div className="container mt-3">
 
@@ -669,7 +676,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
               <div className="card shadow border-0 bg-warning text-dark">
                 <div className="card-body text-center">
                   <h6 className="mb-1">🪙 Gold (g)</h6>
-                  <h4 className="mb-0">{balance.gold_raw}</h4>
+                  <h4 className="mb-0">{formatAmount(balance.gold_raw)}</h4>
                 </div>
               </div>
             </div>
@@ -687,7 +694,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
               <div className="card shadow border-0 bg-primary   text-dark">
                 <div className="card-body text-center">
                   <h6 className="mb-1">⚪ Silver (g)</h6>
-                  <h4 className="mb-0">{balance.silver_raw}</h4>
+                  <h4 className="mb-0">{formatAmount(balance.silver_raw)}</h4>
                 </div>
               </div>
             </div>
@@ -705,7 +712,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
               <div className="card shadow border-0 bg-success text-white">
                 <div className="card-body text-center">
                   <h6 className="mb-1">💰 Cash</h6>
-                  <h4 className="mb-0">{balance.cash}</h4>
+                  <h4 className="mb-0">{formatAmount(balance.cash)}</h4>
                 </div>
               </div>
             </div>
@@ -714,7 +721,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
               <div className="card shadow border-0 bg-primary text-white">
                 <div className="card-body text-center">
                   <h6 className="mb-1">🏦 Bank</h6>
-                  <h4 className="mb-0">{balance.bank}</h4>
+                  <h4 className="mb-0">{formatAmount(balance.bank)}</h4>
                 </div>
               </div>
             </div>
@@ -770,7 +777,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
               <div className="card-body text-center p-2">
                 <div style={{ fontSize: "12px" }}>🏦 {name}</div>
                 <div style={{ fontSize: "16px", fontWeight: "bold" }}>
-                  {value}
+                  {formatAmount(value)}
                 </div>
               </div>
             </div>
