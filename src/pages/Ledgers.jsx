@@ -878,6 +878,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th colSpan="2">Cash</th>
                 <th colSpan="2">Bank Muscat</th>
                 <th colSpan="2">Bank NBO</th>
+                <th colSpan="2">Bank Sohar</th>
                 <th colSpan="2">Bank</th>
                 <th rowSpan="2">Type</th>
                 <th rowSpan="2">Status</th>
@@ -898,6 +899,8 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
 
+                <th className="text-success">Cr</th>
+                <th className="text-danger">Dr</th>
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
                 <th className="text-success">Cr</th>
@@ -961,6 +964,8 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.debit || 0}</td>
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
+                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.credit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.debit || 0}</td>
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
 
@@ -1020,7 +1025,9 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                       <td colSpan="2">{item.cash.closing || 0}</td>
                       <td colSpan="2">{item.bank_muscat?.closing || 0}</td>
                       <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
+                      <td colSpan="2">{item.bank_sohar?.closing || 0}</td>
                       <td colSpan="2">{item.bank.closing || 0}</td>
+                      <td colSpan="2"></td>
 
                       <td></td>
                     </tr>
