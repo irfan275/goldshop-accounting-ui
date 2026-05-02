@@ -12,6 +12,7 @@ import { saveAs } from "file-saver";
 
 function Statement() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -38,18 +39,19 @@ function Statement() {
   //   loadLedgers(1);
   // }, []);
 
-  const loadLedgers = async (pageNumber = 1) => {
+  const loadLedgers = async (pageNumber = 1,reset = false) => {
     let invoiceNo = "";
     let customer = "";
 
     // if (searchText) {
     //   invoiceNo = searchText;
     // } else 
-      if (selectedCustomer) {
+      if (!reset && selectedCustomer) {
       customer = selectedCustomer._id;
     }
-
-    const response = await getStatement(
+    try{
+      setLoading(true);
+      const response = await getStatement(
       customer,
       fromDate.toLocaleDateString("en-CA"),
       toDate.toLocaleDateString("en-CA")
@@ -58,6 +60,12 @@ function Statement() {
     setLedgers(response.data.data || []);
     setTotalPages(response.data.totalPages || 0);
     setPage(pageNumber);
+    }catch(e){
+      console.log("error inloading statement");
+    }finally{
+      setLoading(false);
+    }
+    
   };
 
   // ---------------- DELETE ----------------
@@ -91,10 +99,17 @@ function Statement() {
   };
   // ---------------- CUSTOMER SEARCH ----------------
   useEffect(() => {
-    if (customerSearch.length < 3 || selectedCustomer) {
-      setCustomerResults([]);
-      return;
-    }
+    if (!customerSearch) {
+        // 🔥 input cleared
+        setSelectedCustomer(null);
+        setCustomerResults([]);
+        return;
+      }
+
+      if (customerSearch.length < 3 || selectedCustomer) {
+        setCustomerResults([]);
+        return;
+      }
 
     const timer = setTimeout(async () => {
       const res = await getCustomers(1, 10, customerSearch);
@@ -208,7 +223,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
               setSelectedCustomer(null);
               setFromDate(defaultFrom);
               setToDate(today);
-              loadLedgers(1);
+              loadLedgers(1,true);
             }}
           >
             Reset
@@ -235,8 +250,8 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th colSpan="2">Silver</th>
                 <th colSpan="2">KGB</th>
                 <th colSpan="2">Cash</th>
-                <th colSpan="2">Bank Muscat</th>
-                <th colSpan="2">Bank NBO</th>
+                {/* <th colSpan="2">Bank Muscat</th>
+                <th colSpan="2">Bank NBO</th> */}
                 <th colSpan="2">Bank</th>
 
                 {/* <th rowSpan="2" style={{width:'10%'}}>Action</th> */}
@@ -259,10 +274,10 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th className="text-danger">Dr</th>
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
-                <th className="text-success">Cr</th>
+                {/* <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
                 <th className="text-success">Cr</th>
-                <th className="text-danger">Dr</th>
+                <th className="text-danger">Dr</th> */}
               </tr>
             </thead>
 
@@ -274,6 +289,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 const rows = [];
 
                 // 🔹 MAIN ROW (ENTRY OR TOTAL)
+                if(!item.isBalance){
                 rows.push(
                   <tr
                     key={item._id || index}
@@ -314,10 +330,10 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td>
 
                     {/* BANK */}
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.credit || 0}</td>
+                    {/* <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.debit || 0}</td>
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td> */}
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
 
@@ -336,48 +352,63 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     </td> */}
                   </tr>
                 );
+                }
 
                 // 🔥 CLOSING ROW (RIGHT AFTER TOTAL)
-                // if (isTotal) {
-                //   rows.push(
-                //     <tr key={"closing-" + index} className="table-dark text-white">
+                if (item.isBalance) {
+                  rows.push(
+                    <tr key={"balance-" + index} className="table-dark text-white">
 
-                //       <td colSpan="4">
-                //         <strong>Closing Balance</strong>
-                //       </td>
+                      <td colSpan="4">
+                        <strong>Balance</strong>
+                      </td>
 
-                      
-                //       <td colSpan="2">{item.gold.closing || 0}</td>
-                //       <td colSpan="2">{item.ttb.closing || 0}</td>
-                //       <td colSpan="2">{item.silver.closing || 0}</td>
-                //       <td colSpan="2">{item.silver_bar.closing || 0}</td>
-                //       <td colSpan="2">{item.cash.closing || 0}</td>
-                //       <td colSpan="2">{item.bank_muscat?.closing || 0}</td>
-                //       <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
-                //       <td colSpan="2">{item.bank.closing || 0}</td>
+                      {/* GOLD */}
+                      <td colSpan="4">{item.gold || 0}</td>
 
-                //       <td></td>
-                //     </tr>
-                //   );
-                // }
+                      {/* TTB */}
+                      {/* <td colSpan="2">{item.ttb || 0}</td> */}
 
-                return rows;
-              })}
-            </tbody>
+                      {/* SILVER */}
+                      <td colSpan="4">{item.silver || 0}</td>
 
-          </table>
-        </div>
-      </div>
+                      {/* SILVER BAR */}
+                      {/* <td colSpan="2">{item.silver_bar || 0}</td> */}
 
-      {/* PAGINATION */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+                      {/* CASH */}
+                      <td colSpan="2">{item.cash || 0}</td>
 
-    </div>
-  );
-}
+                      {/* BANK TOTAL */}
+                      <td colSpan="2">{item.bank || 0}</td>
+
+                      <td></td>
+                    </tr>
+                  );
+                }
+
+                                return rows;
+                              })}
+                            </tbody>
+
+                          </table>
+                        </div>
+                      </div>
+                  {loading && (
+                            <div className="overlay-loader">
+                              <div className="spinner-border text-light" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                          )}
+                      {/* PAGINATION */}
+                      <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                      />
+
+                    </div>
+                  );
+                }
 
 export default Statement;

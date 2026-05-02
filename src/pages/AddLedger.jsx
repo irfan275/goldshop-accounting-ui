@@ -31,7 +31,7 @@ export default function AddLedger() {
     name: "",
     description: "",
     shop: "",
-    isOfficial: true,
+    isOfficial: false,
     isBooking : false,
     cash: emptyEntry,
     gold_raw: emptyEntry,

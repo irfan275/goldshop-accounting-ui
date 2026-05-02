@@ -957,9 +957,9 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     </td>
 
                     <td>
-                      {item.isBooking && (
-                        <span className="badge bg-info text-dark">Booked</span>
-                      )}
+                      <span className={`badge ${item.isBooking ? "bg-info text-dark" : "bg-primary text-dark"}`}>
+                        {item.isBooking ? "Booked" : "Unbooked"}
+                      </span>
                     </td>
 
                     {/* ACTION */}
