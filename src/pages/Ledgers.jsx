@@ -12,6 +12,7 @@ import { saveAs } from "file-saver";
 
 function Ledgers() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -45,19 +46,26 @@ function Ledgers() {
     if (searchText) {
       invoiceNo = searchText;
     } else if (selectedCustomer) {
-      customer = selectedCustomer.name;
+      customer = selectedCustomer._id;
     }
+    try{
+      setLoading(true);
+      const response = await getLedger(
+        invoiceNo,
+        customer,
+        fromDate.toLocaleDateString("en-CA"),
+        toDate.toLocaleDateString("en-CA")
+      );
 
-    const response = await getLedger(
-      invoiceNo,
-      customer,
-      fromDate.toLocaleDateString("en-CA"),
-      toDate.toLocaleDateString("en-CA")
-    );
-
-    setLedgers(response.data.data || []);
-    setTotalPages(response.data.totalPages || 0);
-    setPage(pageNumber);
+      setLedgers(response.data.data || []);
+      setTotalPages(response.data.totalPages || 0);
+      setPage(pageNumber);
+    }catch(e){
+      console.log("error in loading statement");
+    }finally{
+      setLoading(false);
+    }
+    
   };
 
   // ---------------- DELETE ----------------
@@ -98,6 +106,12 @@ function Ledgers() {
   };
   // ---------------- CUSTOMER SEARCH ----------------
   useEffect(() => {
+    if (!customerSearch) {
+        // 🔥 input cleared
+        setSelectedCustomer(null);
+        setCustomerResults([]);
+        return;
+      }
     if (customerSearch.length < 3 || selectedCustomer) {
       setCustomerResults([]);
       return;
@@ -951,15 +965,19 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
 
                     <td>
+                      {!isTotal && (
                       <span className={`badge ${item.isOfficial ? "bg-success" : "bg-secondary"}`}>
                         {item.isOfficial ? "Official" : "Unofficial"}
                       </span>
+                      )}
                     </td>
 
                     <td>
+                      {!isTotal && (
                       <span className={`badge ${item.isBooking ? "bg-info text-dark" : "bg-primary text-dark"}`}>
                         {item.isBooking ? "Booked" : "Unbooked"}
                       </span>
+                      )}
                     </td>
 
                     {/* ACTION */}
@@ -1016,7 +1034,13 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
           </table>
         </div>
       </div>
-
+                  {loading && (
+                            <div className="overlay-loader">
+                              <div className="spinner-border text-light" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                          )}
       {/* PAGINATION */}
       <Pagination
         page={page}

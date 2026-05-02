@@ -31,6 +31,7 @@ export default function AddPurchaseLedger() {
     name: "",
     description: "",
     shop: "",
+    isBooking : false,
     cash: emptyEntry,
     gold_raw: emptyEntry,
     gold_bar_1tt: emptyEntry,
@@ -159,7 +160,7 @@ const handleBankChange = (bankCode, field, value) => {
       custId : inv.custId || "",
       description: inv.description || "",
       shop: inv.shop || "",
-
+      isBooking : inv.isBooking,
       cash: { ...emptyEntry },
       gold_raw: { ...emptyEntry },
       gold_bar_1tt: { ...emptyEntry },
@@ -278,6 +279,7 @@ const handleBankChange = (bankCode, field, value) => {
         name: selectedCustomer?.name || form.name,
         custId: selectedCustomer?._id || form.custId,
         description: form.description,
+        isBooking:form.isBooking,
         shop:form.shop,
         entries: buildEntries()
       };
@@ -418,7 +420,34 @@ const handleBankChange = (bankCode, field, value) => {
       }
     />
   </div>
+  {/* Booking */}
+  <div className="col-md-3">
+    <label className="form-label">Booking</label>
 
+    <div className="d-flex align-items-center gap-4 mt-">
+
+      <div className="form-check form-switch m-0">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          style={{ transform: "scale(1.5)", transformOrigin: "left center" }}
+          checked={form.isBooking || false}
+          onChange={(e) =>
+            setForm({ ...form, isBooking: e.target.checked })
+          }
+        />
+      </div>
+
+      <span
+        className={`badge ${
+          form.isBooking ? "bg-success" : "bg-danger"
+        }`}
+      >
+        {form.isBooking ? "Yes" : "No"}
+      </span>
+
+    </div>
+  </div>
 
 </div>
 

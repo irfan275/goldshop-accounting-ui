@@ -61,7 +61,7 @@ function Statement() {
     setTotalPages(response.data.totalPages || 0);
     setPage(pageNumber);
     }catch(e){
-      console.log("error inloading statement");
+      console.log("error in loading statement");
     }finally{
       setLoading(false);
     }

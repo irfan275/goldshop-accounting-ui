@@ -12,7 +12,7 @@ import { saveAs } from "file-saver";
 
 function PurchaseLedgers() {
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
 
   const today = new Date();
@@ -45,19 +45,25 @@ function PurchaseLedgers() {
     if (searchText) {
       invoiceNo = searchText;
     } else if (selectedCustomer) {
-      customer = selectedCustomer.name;
+      customer = selectedCustomer._id;
     }
+    try{
+      setLoading(true);
+      const response = await getLedger(
+        invoiceNo,
+        customer,
+        fromDate.toLocaleDateString("en-CA"),
+        toDate.toLocaleDateString("en-CA")
+      );
 
-    const response = await getLedger(
-      invoiceNo,
-      customer,
-      fromDate.toLocaleDateString("en-CA"),
-      toDate.toLocaleDateString("en-CA")
-    );
-
-    setLedgers(response.data.data || []);
-    setTotalPages(response.data.totalPages || 0);
-    setPage(pageNumber);
+      setLedgers(response.data.data || []);
+      setTotalPages(response.data.totalPages || 0);
+      setPage(pageNumber);
+    }catch(e){
+      console.log("error in loading statement");
+    }finally{
+      setLoading(false);
+    }
   };
 
   // ---------------- DELETE ----------------
@@ -91,6 +97,12 @@ function PurchaseLedgers() {
   };
   // ---------------- CUSTOMER SEARCH ----------------
   useEffect(() => {
+    if (!customerSearch) {
+        // 🔥 input cleared
+        setSelectedCustomer(null);
+        setCustomerResults([]);
+        return;
+      }
     if (customerSearch.length < 3 || selectedCustomer) {
       setCustomerResults([]);
       return;
@@ -256,7 +268,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th colSpan="2">Bank Muscat</th>
                 <th colSpan="2">Bank NBO</th>
                 <th colSpan="2">Bank</th>
-
+                <th rowSpan="2">Status</th>
                 <th rowSpan="2" style={{width:'10%'}}>Action</th>
               </tr>
 
@@ -338,7 +350,13 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
-
+                     <td>
+                      {!isTotal && (
+                      <span className={`badge ${item.isBooking ? "bg-info text-dark" : "bg-primary text-dark"}`}>
+                        {item.isBooking ? "Booked" : "Unbooked"}
+                      </span>
+                      )}
+                    </td>
                     {/* ACTION */}
                     <td>
                       {!isTotal && (
@@ -393,7 +411,13 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
           </table>
         </div>
       </div>
-
+{loading && (
+                            <div className="overlay-loader">
+                              <div className="spinner-border text-light" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                          )}
       {/* PAGINATION */}
       <Pagination
         page={page}
