@@ -36,3 +36,7 @@ export const deleteLedger = (id) => {
 export const getInvoiceNumber = (shopId) => {
   return api.get(`${API_URL}/sequence/${shopId}`);
 };
+
+export const addPurchaseLedger = (id) => {
+  return api.post(`${API_URL}/createPurchaseLedger`, {ledgerId : id});
+};

@@ -71,8 +71,8 @@ function PurchaseLedgers() {
     if (window.confirm("Are you sure to delete this ledger entry?")) {
       try {
         await deleteLedger(id);
-        setLedgers((prev) => prev.filter((l) => l._id !== id));
         alert("Deleted successfully!");
+        loadLedgers(1);
       } catch (err) {
         console.error(err);
         alert("Delete failed");
@@ -373,12 +373,12 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                             Edit
                           </button>
 
-                          {/* <button
+                          <button
                             className="btn btn-sm btn-danger"
-                            onClick={() => handleDelete(item._id)}
+                            onClick={() => handleDelete(item.id)}
                           >
                             Delete
-                          </button> */}
+                          </button>
                         </>
                       )}
                     </td>

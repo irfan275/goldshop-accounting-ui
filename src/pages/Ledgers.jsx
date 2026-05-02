@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteLedger, getBalance, getLedger } from "../services/ledgerService";
+import {  deleteLedger, getBalance, getLedger } from "../services/ledgerService";
 import Pagination from "./Pagination";
 import { getCustomers } from "../services/customerService";
 import { format, subDays } from "date-fns";
@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { addPurchaseLedger } from "../services/purchaseLedgerService";
 
 function Ledgers() {
   const navigate = useNavigate();
@@ -78,6 +79,20 @@ function Ledgers() {
       } catch (err) {
         console.error(err);
         alert("Delete failed");
+      }
+    }
+  };
+  const createPurchaseLedger = async (id) => {
+    if (window.confirm("Are you sure to create this Purchase ledger entry?")) {
+      try {
+        setLoading(true);
+        await addPurchaseLedger(id);
+        alert("Purchase Ledger Created successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Purchase Ledger Creation failed");
+      }finally{
+        setLoading(false);
       }
     }
   };
@@ -995,7 +1010,13 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                           >
                             Edit
                           </button>
-
+                          <button
+                            className="btn btn-sm btn-primary me-2"
+                            onClick={() => createPurchaseLedger(item.id)}
+                          >
+                            Add
+                          </button>
+ 
                           {/* <button
                             className="btn btn-sm btn-danger"
                             onClick={() => handleDelete(item._id)}
