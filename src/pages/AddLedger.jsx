@@ -40,21 +40,10 @@ export default function AddLedger() {
     silver_bar_kg: emptyEntry,
     bank: {}
   });
-  useEffect(() => {
+useEffect(() => {
   async function fetchBanks() {
-    const res = await getBanks(); // your API
+    const res = await getBanks();
     setBanks(res.data.data);
-
-    // initialize form structure
-    const initialBankState = {};
-    res.data.data.forEach(b => {
-      initialBankState[b.code] = { credit: "", debit: "" };
-    });
-
-    setForm(prev => ({
-      ...prev,
-      bank: initialBankState
-    }));
   }
 
   fetchBanks();
@@ -169,7 +158,7 @@ const handleBankChange = (bankCode, field, value) => {
       gold_bar_1tt: { ...emptyEntry },
       silver_raw: { ...emptyEntry },
       silver_bar_kg: { ...emptyEntry },
-      //bank: { ...emptyEntry }
+      bank: {}
     };
 
     inv.entries.forEach((e) => {
@@ -181,7 +170,7 @@ const handleBankChange = (bankCode, field, value) => {
       };
 
       if (e.type.startsWith("bank_")) {
-        newForm.bank = newForm.bank || {};
+        //newForm.bank = newForm.bank || {};
         newForm.bank[e.type] = mapped;
         return;
       }
@@ -896,7 +885,7 @@ const calculateSilverValue = (form) => {
                   <input
                     className="form-control"
                     placeholder="Credit"
-                    value={form.bank?.[bank.code]?.credit || ""}
+                    value={form.bank?.[bank.code]?.credit ?? ""}
                     onChange={(e) =>
                       handleBankChange(bank.code, "credit", e.target.value)
                     }
@@ -907,7 +896,7 @@ const calculateSilverValue = (form) => {
                   <input
                     className="form-control"
                     placeholder="Debit"
-                    value={form.bank?.[bank.code]?.debit || ""}
+                    value={form.bank?.[bank.code]?.debit ?? ""}
                     onChange={(e) =>
                       handleBankChange(bank.code, "debit", e.target.value)
                     }
