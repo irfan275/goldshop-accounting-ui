@@ -11,6 +11,8 @@ import AddLedger from "./pages/AddLedger";
 import PurchaseLedgers from "./pages/PurchaseLedgers";
 import AddPurchaseLedger from "./pages/AddPurchaseLedger";
 import Statement from "./pages/Statement";
+import AdjustmentLedgers from "./pages/AdjustmentLedgers";
+import AddAdjustmentLedger from "./pages/AddAdjustmentLedger";
 
 function App() {
   return (
@@ -30,6 +32,9 @@ function App() {
           <Route path="purchaseLedger" element={<ProtectedRoute><PurchaseLedgers /></ProtectedRoute>} />
           <Route path="/purchaseLedger/add" element={<ProtectedRoute>< AddPurchaseLedger/></ProtectedRoute>} />
           <Route path="/purchaseLedger/edit/:id" element={<ProtectedRoute><AddPurchaseLedger /></ProtectedRoute>} />
+          <Route path="adjustmentLedger" element={<ProtectedRoute><AdjustmentLedgers /></ProtectedRoute>} />
+          <Route path="/adjustmentLedger/add" element={<ProtectedRoute>< AddAdjustmentLedger/></ProtectedRoute>} />
+          <Route path="/adjustmentLedger/edit/:id" element={<ProtectedRoute><AddAdjustmentLedger /></ProtectedRoute>} />
 
           <Route path="statement" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
 

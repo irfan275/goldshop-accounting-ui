@@ -942,125 +942,220 @@ const formatAmount = (value, decimals = 3) => {
                 const rows = [];
 
                 // 🔹 MAIN ROW (ENTRY OR TOTAL)
-                rows.push(
-                  <tr
-                    key={item._id || index}
-                    className={isTotal ? "table-warning fw-bold" :""}
-                  >
+                if(!item.isAdjustment){
+                    rows.push(
+                    <tr
+                      key={item._id || index}
+                      className={isTotal ? "table-warning fw-bold" :""}
+                    >
 
-                    {/* DATE */}
-                    <td>{!isTotal ? formatDate(item.date) : ""}</td>
+                      {/* DATE */}
+                      <td>{!isTotal ? formatDate(item.date) : ""}</td>
 
-                    {/* Invoice Nummber */}
-                    <td>{item.invoiceNumber}</td>
-                    {/* CUSTOMER */}
-                    <td className="fw-semibold">{item.customer}</td>
+                      {/* Invoice Nummber */}
+                      <td>{item.invoiceNumber}</td>
+                      {/* CUSTOMER */}
+                      <td className="fw-semibold">{item.customer}</td>
 
-                    {/* DESCRIPTION */}
-                    <td>{item.description}</td>
-
-                    
-
-                    {/* GOLD */}
-                    <td className="bg-warning-subtle text-success">{item.gold.credit || 0}</td>
-                    <td className="bg-warning-subtle text-danger">{item.gold.debit || 0}</td>
-
-                    {/* TTB */}
-                    <td className="bg-warning-subtle text-success">{item.ttb.credit || 0}</td>
-                    <td className="bg-warning-subtle text-danger">{item.ttb.debit || 0}</td>
-
-                    {/* Silver */}
-                    <td className="text-success" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.debit || 0}</td>
-
-                    {/* KGB */}
-                    <td className="text-success" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.debit || 0}</td>
-
-                    {/* CASH */}
-                    <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{item.cash.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td>
-
-                    {/* BANK */}
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.debit || 0}</td>
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.debit || 0}</td>
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
-
-                    <td>
-                      {!isTotal && (
-                      <span className={`badge ${item.isOfficial ? "bg-success" : "bg-secondary"}`}>
-                        {item.isOfficial ? "Official" : "Unofficial"}
-                      </span>
-                      )}
-                    </td>
-
-                    <td>
-                      {!isTotal && (
-                      <span className={`badge ${item.isBooking ? "bg-info text-dark" : "bg-primary text-dark"}`}>
-                        {item.isBooking ? "Booked" : "Unbooked"}
-                      </span>
-                      )}
-                    </td>
-
-                    {/* ACTION */}
-                    <td>
-                      {!isTotal && (
-                        <>
-                          <button
-                            className="btn btn-sm btn-primary me-2"
-                            onClick={() => navigate(`/ledgers/edit/${item.id}`)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn btn-sm btn-primary me-2"
-                            onClick={() => createPurchaseLedger(item.id)}
-                          >
-                            Add
-                          </button>
- 
-                          {/* <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDelete(item._id)}
-                          >
-                            Delete
-                          </button> */}
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-
-                // 🔥 CLOSING ROW (RIGHT AFTER TOTAL)
-                if (isTotal) {
-                  rows.push(
-                    <tr key={"closing-" + index} className="table-dark text-white">
-
-                      <td colSpan="4">
-                        <strong>Closing Balance</strong>
-                      </td>
+                      {/* DESCRIPTION */}
+                      <td>{item.description}</td>
 
                       
-                      <td colSpan="2">{item.gold.closing || 0}</td>
-                      <td colSpan="2">{item.ttb.closing || 0}</td>
-                      <td colSpan="2">{item.silver.closing || 0}</td>
-                      <td colSpan="2">{item.silver_bar.closing || 0}</td>
-                      <td colSpan="2">{item.cash.closing || 0}</td>
-                      <td colSpan="2">{item.bank_muscat?.closing || 0}</td>
-                      <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
-                      <td colSpan="2">{item.bank_sohar?.closing || 0}</td>
-                      <td colSpan="2">{item.bank.closing || 0}</td>
-                      <td colSpan="2"></td>
 
-                      <td></td>
+                      {/* GOLD */}
+                      <td className="bg-warning-subtle text-success">{item.gold.credit || 0}</td>
+                      <td className="bg-warning-subtle text-danger">{item.gold.debit || 0}</td>
+
+                      {/* TTB */}
+                      <td className="bg-warning-subtle text-success">{item.ttb.credit || 0}</td>
+                      <td className="bg-warning-subtle text-danger">{item.ttb.debit || 0}</td>
+
+                      {/* Silver */}
+                      <td className="text-success" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.debit || 0}</td>
+
+                      {/* KGB */}
+                      <td className="text-success" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.debit || 0}</td>
+
+                      {/* CASH */}
+                      <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{item.cash.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td>
+
+                      {/* BANK */}
+                      <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.debit || 0}</td>
+                      <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
+                      <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.debit || 0}</td>
+                      <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
+                      <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
+
+                      <td>
+                        {!isTotal && (
+                        <span className={`badge ${item.isOfficial ? "bg-success" : "bg-secondary"}`}>
+                          {item.isOfficial ? "Official" : "Unofficial"}
+                        </span>
+                        )}
+                      </td>
+
+                      <td>
+                        {!isTotal && (
+                        <span className={`badge ${item.isBooking ? "bg-info text-dark" : "bg-primary text-dark"}`}>
+                          {item.isBooking ? "Booked" : "Unbooked"}
+                        </span>
+                        )}
+                      </td>
+
+                      {/* ACTION */}
+                      <td>
+                        {!isTotal && (
+                          <>
+                            <button
+                              className="btn btn-sm btn-primary me-2"
+                              onClick={() => navigate(`/ledgers/edit/${item.id}`)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-primary me-2"
+                              onClick={() => createPurchaseLedger(item.id)}
+                            >
+                              Add
+                            </button>
+  
+                            {/* <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleDelete(item._id)}
+                            >
+                              Delete
+                            </button> */}
+                          </>
+                        )}
+                      </td>
                     </tr>
                   );
+
+                  // 🔥 CLOSING ROW (RIGHT AFTER TOTAL)
+                  if (isTotal) {
+                    rows.push(
+                      <tr key={"closing-" + index} className="table-dark text-white">
+
+                        <td colSpan="4">
+                          <strong>Closing Balance</strong>
+                        </td>
+
+                        
+                        <td colSpan="2">{item.gold.closing || 0}</td>
+                        <td colSpan="2">{item.ttb.closing || 0}</td>
+                        <td colSpan="2">{item.silver.closing || 0}</td>
+                        <td colSpan="2">{item.silver_bar.closing || 0}</td>
+                        <td colSpan="2">{item.cash.closing || 0}</td>
+                        <td colSpan="2">{item.bank_muscat?.closing || 0}</td>
+                        <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
+                        <td colSpan="2">{item.bank_sohar?.closing || 0}</td>
+                        <td colSpan="2">{item.bank.closing || 0}</td>
+                        <td colSpan="2"></td>
+
+                        <td></td>
+                      </tr>
+                    );
+                  }
                 }
+                if(item.isAdjustment){
+                  if(!item.isTotal){
+                     rows.push(
+                      <tr
+                        key={item._id || index}
+                        className={item.isAdjustment ? "table-success fw-bold" :""}
+                      >
+
+                        {/* DATE */}
+                        <td></td>
+
+                        {/* Invoice Nummber */}
+                        <td>{item.invoiceNumber}</td>
+                        {/* CUSTOMER */}
+                        <td className="fw-semibold">{item.customer}</td>
+
+                        {/* DESCRIPTION */}
+                        <td>{item.description}</td>
+
+                        
+
+                        {/* GOLD */}
+                        <td className="bg-warning-subtle text-success">{item.gold.credit || 0}</td>
+                        <td className="bg-warning-subtle text-danger">{item.gold.debit || 0}</td>
+
+                        {/* TTB */}
+                        <td className="bg-warning-subtle text-success">{item.ttb.credit || 0}</td>
+                        <td className="bg-warning-subtle text-danger">{item.ttb.debit || 0}</td>
+
+                        {/* Silver */}
+                        <td className="text-success" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }} >{item.silver.debit || 0}</td>
+
+                        {/* KGB */}
+                        <td className="text-success" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.debit || 0}</td>
+
+                        {/* CASH */}
+                        <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{item.cash.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td>
+
+                        {/* BANK */}
+                        <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_muscat?.debit || 0}</td>
+                        <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
+                        <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.debit || 0}</td>
+                        <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit || 0}</td>
+                        <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit || 0}</td>
+
+                        <td>
+                          
+                        </td>
+
+                        <td>
+                          
+                        </td>
+
+                        {/* ACTION */}
+                        <td>
+                          
+                        </td>
+                      </tr>
+                    );
+                  }else{
+                    if (isTotal) {
+                      rows.push(
+                        <tr key={"closing-" + index} className="table-primary text-white">
+
+                          <td colSpan="4">
+                            <strong> Balance After Adjustment</strong>
+                          </td>
+
+                          
+                          <td colSpan="2">{item.gold || 0}</td>
+                          <td colSpan="2">{item.ttb || 0}</td>
+                          <td colSpan="2">{item.silver || 0}</td>
+                          <td colSpan="2">{item.silver_bar || 0}</td>
+                          <td colSpan="2">{item.cash || 0}</td>
+                          <td colSpan="2">{item.bank_muscat?.credit || 0}</td>
+                          <td colSpan="2">{item.bank_nbo?.credit || 0}</td>
+                          <td colSpan="2">{item.bank_sohar?.credit || 0}</td>
+                          <td colSpan="2">{item.bank || 0}</td>
+                          <td colSpan="2"></td>
+
+                          <td></td>
+                        </tr>
+                      );
+                    }
+                  }
+                }
+
 
                 return rows;
               })}

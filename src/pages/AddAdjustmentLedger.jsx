@@ -1,0 +1,827 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../services/adjustmentLedgerService";
+import { getCustomers } from "../services/customerService";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { getBanks, getShops } from "../services/userService";
+
+export default function AddAdjustmentLedger() {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const navigate = useNavigate();
+  const [invoiceId, setInvoiceId] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerResults, setCustomerResults] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [shops, setShops] = useState([]);
+  const [banks, setBanks] = useState([]);
+
+  const emptyEntry = {
+  credit: "",
+  debit: "",
+  rate: "",
+  value: ""
+};
+  const [form, setForm] = useState({
+    date: "",
+    name: "",
+    description: "",
+    shop: "",
+    isBooking : false,
+    cash: emptyEntry,
+    gold_raw: emptyEntry,
+    gold_bar_1tt: emptyEntry,
+    silver_raw: emptyEntry,
+    silver_bar_kg: emptyEntry,
+    bank: {}
+  });
+  useEffect(() => {
+  async function fetchBanks() {
+    const res = await getBanks(); // your API
+    setBanks(res.data.data);
+
+    // initialize form structure
+    const initialBankState = {};
+    res.data.data.forEach(b => {
+      initialBankState[b.code] = { credit: "", debit: "" };
+    });
+
+    setForm(prev => ({
+      ...prev,
+      bank: initialBankState
+    }));
+  }
+
+  fetchBanks();
+}, []);
+const handleBankChange = (bankCode, field, value) => {
+  setForm(prev => ({
+    ...prev,
+    bank: {
+      ...prev.bank,
+      [bankCode]: {
+        ...prev.bank[bankCode],
+        [field]: value
+      }
+    }
+  }));
+};
+    useEffect(() => {
+      fetchShops();
+    }, []);
+    const fetchShops = async () => {
+      const response = await getShops();
+      setShops(response.data.data || []);
+    };
+  useEffect(() => {
+  if (!isEditMode) {
+    const today = new Date().toISOString().split("T")[0];
+    setForm((prev) => ({ ...prev, date: today }));
+  }
+}, []);
+  // ------------------ CUSTOMER SEARCH ------------------
+  useEffect(() => {
+
+    if (customerSearch.length < 3 || selectedCustomer) {
+      setCustomerResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const res = await getCustomers(1, 10, customerSearch);
+      setCustomerResults(res.data.data || []);
+    }, 400);
+
+    return () => clearTimeout(timer);
+
+  }, [customerSearch, selectedCustomer]);
+// ------------------ Edit Invoice ------------------
+  useEffect(() => {
+
+    if (isEditMode) {
+      loadInvoice();
+    }
+
+  }, [id]);
+  // useEffect(() => {
+  // if (!isEditMode) {
+  //     loadInvoiceNumber();
+  //   }
+  // }, [isEditMode]);
+  useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (user?.role === "EMPLOYEE") {
+    // ✅ set form value
+    setForm(prev => ({
+      ...prev,
+      shopId: user.shopId
+    }));
+    if(!isEditMode){
+        handleShopChange(user.shopId);
+    }
+    
+  }
+}, []);
+  const handleShopChange = async (shopId) => {
+    //setSelectedShop(shopId);
+
+      if (!shopId) {
+        setInvoiceNumber("");
+        return;
+      }
+    // ✅ set form value
+    setForm(prev => ({
+      ...prev,
+      shop: shopId
+    }));
+    try {
+      const res = await getInvoiceNumber(shopId); // API call
+      setInvoiceNumber(res.data.invoiceNumber);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadInvoice = async () => {
+      const res = await getLedgerById(id);
+    const inv = res.data.data;
+
+    setSelectedCustomer(inv.name);
+    setCustomerSearch(inv.name);
+
+    const newForm = {
+      date: inv.date?.split("T")[0],
+      name: inv.name || "",
+      custId : inv.custId || "",
+      description: inv.description || "",
+      shop: inv.shop || "",
+      isBooking : inv.isBooking,
+      cash: { ...emptyEntry },
+      gold_raw: { ...emptyEntry },
+      gold_bar_1tt: { ...emptyEntry },
+      silver_raw: { ...emptyEntry },
+      silver_bar_kg: { ...emptyEntry },
+      //bank: { ...emptyEntry }
+    };
+
+    inv.entries.forEach((e) => {
+      const mapped = {
+        credit: e.credit || 0,
+        debit: e.debit || 0,
+        rate: e.rate || 0,
+        value: e.value || 0
+      };
+
+      if (e.type.startsWith("bank_")) {
+        newForm.bank = newForm.bank || {};
+        newForm.bank[e.type] = mapped;
+        return;
+      }
+      switch (e.type) {
+        case "cash":
+          newForm.cash = mapped;
+          break;
+
+        case "gold_raw":
+          newForm.gold_raw = mapped;
+          break;
+
+        case "gold_bar_1tt":
+        case "gold_bar":
+          newForm.gold_bar_1tt = mapped;
+          break;
+
+        case "silver_raw":
+          newForm.silver_raw = mapped;
+          break;
+
+        case "silver_bar_kg":
+        case "silver_bar":
+          newForm.silver_bar_kg = mapped;
+          break;
+
+        // case "bank":
+        //   newForm.bank = mapped;
+        //   break;
+
+        default:
+          break;
+      }
+    });
+    setForm(newForm);
+    setInvoiceNumber(inv.invoiceNumber)
+    setInvoiceId(inv._id);
+};
+
+  const handleChange = (section, field, value) => {
+    setForm({
+      ...form,
+      [section]: {
+        ...form[section],
+        [field]: value
+      }
+    });
+  };
+
+  const buildEntries = () => {
+    const entries = [];
+
+    const pushIf = (type, data, extra = {}) => {
+      if (data.credit || data.debit) {
+        entries.push({
+          type,
+          ...extra,
+          credit: Number(data.credit || 0),
+          debit: Number(data.debit || 0),
+          rate: Number(data.rate || 0),
+          value: Number(data.value || 0)
+        });
+      }
+    };
+
+    pushIf("cash", form.cash);
+    pushIf("gold_raw", form.gold_raw);
+    pushIf("gold_bar", form.gold_bar_1tt, { subType: "1tt" });
+    pushIf("silver_raw", form.silver_raw);
+    pushIf("silver_bar", form.silver_bar_kg, { subType: "kg" });
+    //pushIf("bank", form.bank);
+    // ✅ dynamic banks
+  Object.keys(form.bank || {}).forEach((bankKey) => {
+    const bankData = form.bank[bankKey];
+
+    if (bankData && (bankData.credit || bankData.debit)) {
+      entries.push({
+        type: bankKey, // 👈 "bank_muscat", "bank_nbo"
+        credit: Number(bankData.credit || 0),
+        debit: Number(bankData.debit || 0),
+        rate: 0,
+        value: 0
+      });
+    }
+  });
+
+    return entries;
+  };
+
+  const handleSubmit = async () => {
+    try{
+      if (!selectedCustomer) return alert("Select customer");
+      if (!form.description) return alert("add desccription");
+      if (!form.shop) return alert("select shop");
+      
+      const payload = {
+        date: form.date,
+        name: selectedCustomer?.name || form.name,
+        custId: selectedCustomer?._id || form.custId,
+        description: form.description,
+        isBooking:form.isBooking,
+        shop:form.shop,
+        entries: buildEntries()
+      };
+      if (payload.entries.length==0) return alert("add entry");
+      setLoading(true); // 🔥 start loader
+      if (isEditMode) {
+      
+        await updateLedger(id, payload);
+        setInvoiceId(id);
+        alert("Ledger updated");
+        
+      } else {
+
+        let invoice = await createLedger(payload);
+        setInvoiceId(invoice.data.data._id);
+        alert("Ledger created");
+
+      }
+      navigate("/adjustmentLedger");
+    }catch (error) {
+        console.error(error);
+        alert("Something went wrong");
+
+      } finally {
+        setLoading(false); // 🔥 always stop loader
+      }
+    
+  };
+
+  return (
+    <div className="container mt-4">
+
+  {/* ===== CARD ===== */}
+  <div className="card shadow">
+    <div className="card-header bg-primary text-white">
+      <h3>{isEditMode ? "Edit Adjustment Ledger" : "Create Adjustment Ledger"}</h3>
+      {invoiceNumber && (
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <strong>Invoice Number: </strong> {invoiceNumber}
+          </div>
+          
+        </div>
+      )}
+    </div>
+
+    <div className="card-body">
+
+      {/* ===== TOP FIELDS ===== */}
+      <div className="row mb-3">
+        <div className="col-md-3">
+          <label className="form-label">Date</label>
+          <div className="w-100">
+            <DatePicker
+              selected={form.date ? new Date(form.date) : null}
+              onChange={(date) =>
+                setForm({
+                  ...form,
+                  date: date ? date.toLocaleDateString("en-CA") : null
+                })
+              }
+              className="form-control w-100"
+              wrapperClassName="w-100"
+              dateFormat="dd-MMM-yyyy"
+              placeholderText="Select Date"
+            />
+          </div>
+        </div>
+        {/* SHOP */}
+
+        <div className="col-md-4">
+
+          <label className="form-label"><strong>Shop</strong></label>
+
+          <select
+            className="form-control"
+            name="shopId"
+            value={form.shop}
+            onChange={(e) => handleShopChange(e.target.value )}
+            disabled={JSON.parse(localStorage.getItem("user"))?.role === "EMPLOYEE"}
+          >
+
+            <option value="">Select Shop</option>
+
+            {shops.map((shop) => (
+              <option key={shop._id} value={shop._id}>
+                {shop.name}
+              </option>
+            ))}
+
+          </select>
+
+        </div>
+        <div className="col-md-5 position-relative">
+          <label className="form-label">Customer</label>
+          <input
+            className="form-control"
+            placeholder="Search Customer..."
+            value={customerSearch}
+            onChange={(e) => {
+              setCustomerSearch(e.target.value);
+              setSelectedCustomer(null);
+            }}
+          />
+
+          {/* Dropdown */}
+          {customerResults.length > 0 && (
+            <ul className="list-group position-absolute w-100" style={{ zIndex: 1000 }}>
+              {customerResults.map((c) => (
+                <li
+                  key={c._id}
+                  className="list-group-item list-group-item-action"
+                  onClick={() => {
+                    setSelectedCustomer(c);
+                    setCustomerSearch(c.name);
+                    setCustomerResults([]);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  {c.name}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+      <div className="row mb-3">
+
+  {/* Description */}
+  <div className="col-md-6">
+    <label className="form-label">Description</label>
+    <input
+      className="form-control"
+      placeholder="Enter description"
+      value={form.description}
+      onChange={(e) =>
+        setForm({ ...form, description: e.target.value })
+      }
+    />
+  </div>
+  {/* Booking */}
+  {/* <div className="col-md-3">
+    <label className="form-label">Booking</label>
+
+    <div className="d-flex align-items-center gap-4 mt-">
+
+      <div className="form-check form-switch m-0">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          style={{ transform: "scale(1.5)", transformOrigin: "left center" }}
+          checked={form.isBooking || false}
+          onChange={(e) =>
+            setForm({ ...form, isBooking: e.target.checked })
+          }
+        />
+      </div>
+
+      <span
+        className={`badge ${
+          form.isBooking ? "bg-success" : "bg-danger"
+        }`}
+      >
+        {form.isBooking ? "Yes" : "No"}
+      </span>
+
+    </div>
+  </div> */}
+
+</div>
+
+      
+
+<div className="card mb-3">
+
+  {/* HEADER */}
+  <div className="card-header bg-warning d-flex justify-content-between align-items-center">
+    <strong>🪙 Gold</strong>
+
+  </div>
+
+  {/* BODY */}
+  <div className="card-body">
+
+    <div className="row g-3">
+
+      {/* 🔹 GOLD RAW */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-light">
+
+          <h6 className="text-warning mb-3">
+            ⚖️ Gold Raw (grams)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                className="form-control"
+                placeholder="Credit"
+                value={form.gold_raw.credit}
+                onChange={(e) =>
+                  handleChange("gold_raw", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                className="form-control"
+                placeholder="Debit"
+                value={form.gold_raw.debit}
+                onChange={(e) =>
+                  handleChange("gold_raw", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_raw.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("gold_raw", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_raw.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("gold_raw", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 🔹 GOLD BAR */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-white shadow-sm">
+
+          <h6 className="text-primary mb-3">
+            🪙 Gold Bar (TTB)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                className="form-control"
+                placeholder="Credit"
+                value={form.gold_bar_1tt.credit}
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                className="form-control"
+                placeholder="Debit"
+                value={form.gold_bar_1tt.debit}
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_bar_1tt.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.gold_bar_1tt.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("gold_bar_1tt", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+<div className="card mb-3">
+
+  {/* HEADER */}
+  <div
+  className="card-header d-flex justify-content-between align-items-center"
+      style={{
+        background: "linear-gradient(135deg, #f5f5f5, #dcdcdc)",
+        color: "#333"
+      }}
+    >
+    <strong>
+       🥈 Silver
+    </strong>
+
+      </div>
+
+  {/* BODY */}
+  <div className="card-body">
+
+    <div className="row g-3">
+
+      {/* 🔹 SILVER RAW */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-light">
+
+          <h6 className="mb-3" style={{ color: "#6c757d" }}>
+           ⚪ Silver Raw (grams)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                //type="number"
+                className="form-control"
+                placeholder="Credit"
+                value={form.silver_raw.credit}
+                onChange={(e) =>
+                  handleChange("silver_raw", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                //type="number"
+                className="form-control"
+                placeholder="Debit"
+                value={form.silver_raw.debit}
+                onChange={(e) =>
+                  handleChange("silver_raw", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_raw.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("silver_raw", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_raw.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("silver_raw", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 🔹 SILVER BAR */}
+      <div className="col-md-6">
+        <div className="border rounded p-3 bg-white shadow-sm">
+
+          <h6 className="mb-3 text-secondary">
+            ⬜ Silver Bar (1 KG)
+          </h6>
+
+          <div className="row g-2">
+            <div className="col-3">
+              <label className="form-label">Credit</label>
+              <input
+                //type="number"
+                className="form-control"
+                placeholder="Credit"
+                value={form.silver_bar_kg.credit}
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "credit", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-3">
+              <label className="form-label">Debit</label>
+              <input
+                //type="number"
+                className="form-control"
+                placeholder="Debit"
+                value={form.silver_bar_kg.debit}
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "debit", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Rate/g</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_bar_kg.rate}
+                placeholder="Rate/g"
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "rate", e.target.value)
+                }
+                />
+            </div>
+            <div className="col-3">
+              <label className="form-label">Price</label>
+              <input
+                className="form-control "
+                //style={{ width: "150px" }}
+                value={form.silver_bar_kg.value}
+                placeholder="Total Price"
+                onChange={(e) =>
+                  handleChange("silver_bar_kg", "value", e.target.value)
+                }
+                />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{/* ===== CASH ===== */}
+      <div className="card mb-3">
+        <div className="card-header bg-info">💰 Cash</div>
+        <div className="card-body row">
+          <div className="col-md-6">
+            <input
+              className="form-control"
+              placeholder="Credit"
+              value={form.cash.credit}
+              onChange={(e) => handleChange("cash", "credit", e.target.value)}
+            />
+          </div>
+          <div className="col-md-6">
+            <input
+              className="form-control"
+              placeholder="Debit"
+              value={form.cash.debit}
+              onChange={(e) => handleChange("cash", "debit", e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="card mb-3">
+          <div className="card-header bg-info">🏦 Banks</div>
+          <div className="card-body">
+
+            {banks.map((bank) => (
+              <div key={bank.code} className="row mb-2 align-items-center">
+
+                <div className="col-md-3">
+                  <strong>{bank.name}</strong>
+                </div>
+
+                <div className="col-md-4">
+                  <input
+                    className="form-control"
+                    placeholder="Credit"
+                    value={form.bank?.[bank.code]?.credit || ""}
+                    onChange={(e) =>
+                      handleBankChange(bank.code, "credit", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <input
+                    className="form-control"
+                    placeholder="Debit"
+                    value={form.bank?.[bank.code]?.debit || ""}
+                    onChange={(e) =>
+                      handleBankChange(bank.code, "debit", e.target.value)
+                    }
+                  />
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+        {loading && (
+          <div className="overlay-loader">
+            <div className="spinner-border text-light" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
+      {/* ===== BUTTON ===== */}
+      <div className="text-end">
+        <button className="btn btn-success" onClick={handleSubmit}>
+          {/* {loading && (
+            <span className="spinner-border spinner-border-sm me-2"></span>
+          )} */}
+          {isEditMode ? "Update Ledger" : "Save Ledger"}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+  );
+}

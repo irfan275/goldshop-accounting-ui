@@ -46,6 +46,17 @@ function Sidebar() {
             Purchase Ledger
           </NavLink>
         </li>
+        <li>
+          <NavLink
+            to="/adjustmentLedger"
+            className={({ isActive }) =>
+              "menu-link" + (isActive ? " active" : "")
+            }
+          >
+            <FaFileInvoice className="menu-icon" />
+            Adjustment Ledger
+          </NavLink>
+        </li>
          <li>
           <NavLink
             to="/statement"
