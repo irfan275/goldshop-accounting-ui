@@ -1056,7 +1056,7 @@ const formatAmount = (value, decimals = 3) => {
                         <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
                         <td colSpan="2">{item.bank_sohar?.closing || 0}</td>
                         <td colSpan="2">{item.bank.closing || 0}</td>
-                        <td colSpan="2"></td>
+                        <td colSpan="2" style={{backgroundColor:'green'}}>{item.cash.closing+item.bank.closing}</td>
 
                         <td></td>
                       </tr>
@@ -1147,7 +1147,7 @@ const formatAmount = (value, decimals = 3) => {
                           <td colSpan="2">{item.bank_nbo?.credit || 0}</td>
                           <td colSpan="2">{item.bank_sohar?.credit || 0}</td>
                           <td colSpan="2">{item.bank || 0}</td>
-                          <td colSpan="2"></td>
+                          <td colSpan="2" style={{backgroundColor:'green'}}>{item.cash+item.bank}</td>
 
                           <td></td>
                         </tr>
