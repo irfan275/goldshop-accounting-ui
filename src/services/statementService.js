@@ -8,8 +8,8 @@ const API_URL = "statement";
 //     params: { page, size, invoiceNumber,customerId }
 //   });
 // };
-export const getStatement = (customer, fromDate, toDate) => {
+export const getStatement = (customer,invoiceNumber, fromDate, toDate) => {
   return api.get(API_URL, {
-    params: { customer, fromDate, toDate }
+    params: { customer,invoiceNumber, fromDate, toDate }
   });
 };

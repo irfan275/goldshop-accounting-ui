@@ -43,9 +43,9 @@ function Statement() {
     let invoiceNo = "";
     let customer = "";
 
-    // if (searchText) {
-    //   invoiceNo = searchText;
-    // } else 
+    if (searchText) {
+      invoiceNo = searchText;
+    } else 
       if (!reset && selectedCustomer) {
       customer = selectedCustomer._id;
     }
@@ -53,6 +53,7 @@ function Statement() {
       setLoading(true);
       const response = await getStatement(
       customer,
+      invoiceNo,
       fromDate.toLocaleDateString("en-CA"),
       toDate.toLocaleDateString("en-CA")
     );
@@ -175,14 +176,14 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
         </div>
 
         {/* SEARCH */}
-        {/* <div className="col-md-3">
+        <div className="col-md-3">
           <input
             className="form-control"
             placeholder="Ledger No / Ref"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-        </div> */}
+        </div>
 
         {/* FROM DATE */}
         <div className="col-md-2">
@@ -253,6 +254,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 {/* <th colSpan="2">Bank Muscat</th>
                 <th colSpan="2">Bank NBO</th> */}
                 <th colSpan="2">Bank</th>
+                <th colSpan="1">Total</th>
 
                 {/* <th rowSpan="2" style={{width:'10%'}}>Action</th> */}
               </tr>
@@ -381,7 +383,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                       {/* BANK TOTAL */}
                       <td colSpan="2">{item.bank || 0}</td>
 
-                      <td></td>
+                      <td colSpan="1" style={{backgroundColor:'green'}}>{(item.cash+item.bank).toFixed(3)}</td>
                     </tr>
                   );
                 }
