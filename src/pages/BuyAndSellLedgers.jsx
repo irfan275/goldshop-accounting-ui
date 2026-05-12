@@ -163,6 +163,57 @@ function calculateGoldDollarPrice(item) {
 
   return Number(result.toFixed(3));
 }
+function getGoldBalance(item) {
+  const buy =
+    Number(item.gold?.credit || 0) +
+    (Number(item.ttb?.credit || 0) * 116.64);
+
+  const sell =
+    Number(item.gold?.debit || 0) +
+    (Number(item.ttb?.debit || 0) * 116.64);
+
+  return buy - sell;
+}
+
+function getSilverBalance(item) {
+  const buy =
+    Number(item.silver?.credit || 0) +
+    (Number(item.silver_bar?.credit || 0) * 116.64);
+
+  const sell =
+    Number(item.silver?.debit || 0) +
+    (Number(item.silver_bar?.debit || 0) * 116.64);
+
+  return buy - sell;
+}
+
+function getAmountBalance(item) {
+  const credit =
+    Number(item.bank?.credit || 0) +
+    Number(item.cash?.credit || 0);
+
+  const debit =
+    Number(item.bank?.debit || 0) +
+    Number(item.cash?.debit || 0);
+
+  return credit - debit;
+}
+
+function calculateDollarPrice(item) {
+  const goldBalance = getGoldBalance(item);
+  const amountBalance = getAmountBalance(item);
+
+  if (!goldBalance || !amountBalance) {
+    return 0;
+  }
+
+  const result =
+    (amountBalance / goldBalance) *
+    116.64 /
+    1.4485;
+
+  return Number(result.toFixed(3));
+}
   return (
     <div className="container mt-3">
 
@@ -432,28 +483,35 @@ function calculateGoldDollarPrice(item) {
                 
 
                 // 🔥 CLOSING ROW (RIGHT AFTER TOTAL)
-                // if (isTotal) {
-                //   rows.push(
-                //     <tr key={"closing-" + index} className="table-dark text-white">
+                if (isTotal) {
+                  rows.push(
+                    <tr key={"closing-" + index} className="table-dark text-white">
 
-                //       <td colSpan="4">
-                //         <strong>Closing Balance</strong>
-                //       </td>
+                      <td colSpan="4">
+                        <strong>Closing Balance</strong>
+                      </td>
 
                       
-                //       <td colSpan="2">{item.gold.closing || 0}</td>
-                //       <td colSpan="2">{item.ttb.closing || 0}</td>
-                //       <td colSpan="2">{item.silver.closing || 0}</td>
-                //       <td colSpan="2">{item.silver_bar.closing || 0}</td>
-                //       <td colSpan="2">{item.cash.closing || 0}</td>
-                //       <td colSpan="2">{item.bank_muscat?.closing || 0}</td>
-                //       <td colSpan="2">{item.bank_nbo?.closing || 0}</td>
-                //       <td colSpan="2">{item.bank.closing || 0}</td>
+                      <td colSpan="2">
+                          {getGoldBalance(item).toFixed(3)}
+                        </td>
 
-                //       <td></td>
-                //     </tr>
-                //   );
-                // }
+                        <td colSpan="2">
+                          {getSilverBalance(item).toFixed(3)}
+                        </td>
+
+                        <td colSpan="2">
+                          {getAmountBalance(item).toFixed(3)}
+                        </td>
+
+                        <td colSpan="1">
+                          {calculateDollarPrice(item)}
+                        </td>
+
+                      <td></td>
+                    </tr>
+                  );
+                }
 
                 return rows;
               })}
