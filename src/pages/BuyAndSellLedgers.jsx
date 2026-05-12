@@ -32,7 +32,8 @@ function BuyAndSellLedgers() {
   const [balance, setBalance] = useState(null);
   const [ledgers, setLedgers] = useState([]);
   const [showBanks, setShowBanks] = useState(false);
-
+const MULTIPLIER = 116.64;
+const DIVISOR = 1.4485;
   // ---------------- LOAD LEDGERS ----------------
   useEffect(() => {
     loadLedgers(1);
@@ -198,7 +199,42 @@ function getAmountBalance(item) {
 
   return credit - debit;
 }
+function calculateBuyDollarPrice(item) {
+  const amountCr =
+    Number(item.cash?.credit || 0) +
+    Number(item.bank?.credit || 0);
 
+  const goldBuy =
+    Number(item.gold?.credit || 0) +
+    (Number(item.ttb?.credit || 0) * MULTIPLIER);
+
+  if (!amountCr || !goldBuy) return 0;
+
+  const result =
+    (amountCr / goldBuy) *
+    MULTIPLIER /
+    DIVISOR;
+
+  return Number(result.toFixed(3));
+}
+function calculateSellDollarPrice(item) {
+  const amountDr =
+    Number(item.cash?.debit || 0) +
+    Number(item.bank?.debit || 0);
+
+  const goldSell =
+    Number(item.gold?.debit || 0) +
+    (Number(item.ttb?.debit || 0) * MULTIPLIER);
+
+  if (!amountDr || !goldSell) return 0;
+
+  const result =
+    (amountDr / goldSell) *
+    MULTIPLIER /
+    DIVISOR;
+
+  return Number(result.toFixed(3));
+}
 function calculateDollarPrice(item) {
   const goldBalance = getGoldBalance(item);
   const amountBalance = getAmountBalance(item);
@@ -347,7 +383,7 @@ function calculateDollarPrice(item) {
                 <th rowSpan="2" style={{width:'30%'}}>Description</th>
 
                 <th colSpan="2">Gold</th>
-                <th colSpan="2">Silver</th>
+                {/* <th colSpan="2">Silver</th> */}
                 <th colSpan="2">Amount</th>
                 <th rowSpan="2">Dollar Price</th>
                 <th rowSpan="2" style={{width:'10%'}}>Action</th>
@@ -357,8 +393,8 @@ function calculateDollarPrice(item) {
                 <th className="text-success">Buy</th>
                 <th className="text-danger">Sell</th>
 
-                <th className="text-success">Buy</th>
-                <th className="text-danger">Sell</th>
+                {/* <th className="text-success">Buy</th>
+                <th className="text-danger">Sell</th> */}
 
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
@@ -407,8 +443,8 @@ function calculateDollarPrice(item) {
                     <td className="bg-warning-subtle text-danger">{item.ttb.debit || 0}</td> */}
 
                     {/* Silver */}
-                    <td className="text-success" style={{ backgroundColor: "#EBEEF0" }} >{(item.silver.credit+(item.silver_bar.credit*1000)).toFixed(3)}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }} >{(item.silver.debit+(item.silver_bar.debit*1000)).toFixed(3)}</td>
+                    {/* <td className="text-success" style={{ backgroundColor: "#EBEEF0" }} >{(item.silver.credit+(item.silver_bar.credit*1000)).toFixed(3)}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#EBEEF0" }} >{(item.silver.debit+(item.silver_bar.debit*1000)).toFixed(3)}</td> */}
 
                     {/* KGB */}
                     {/* <td className="text-success" style={{ backgroundColor: "#EBEEF0" }}>{item.silver_bar.credit || 0}</td>
@@ -496,13 +532,14 @@ function calculateDollarPrice(item) {
                           {getGoldBalance(item).toFixed(3)}
                         </td>
 
-                        <td colSpan="2">
+                        {/* <td colSpan="2">
                           {getSilverBalance(item).toFixed(3)}
-                        </td>
-
-                        <td colSpan="2">
+                        </td> */}
+                        <td colSpan="1">{calculateBuyDollarPrice(item).toFixed(3)}</td>
+                        <td colSpan="1">{calculateSellDollarPrice(item).toFixed(3)}</td>
+                        {/* <td colSpan="2">
                           {getAmountBalance(item).toFixed(3)}
-                        </td>
+                        </td> */}
 
                         <td colSpan="1">
                           {calculateDollarPrice(item)}
