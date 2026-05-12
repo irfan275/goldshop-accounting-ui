@@ -128,6 +128,41 @@ const getFileTimestamp = () => {
 const bankEntries = Object.entries(balance || {}).filter(([k]) =>
   k.startsWith("bank_")
 );
+function calculateGoldDollarPrice(item) {
+  const goldCr = Number(item.gold?.credit || 0);
+  const goldDr = Number(item.gold?.debit || 0);
+
+  const amountCr =
+    Number(item.cash?.credit || 0) +
+    Number(item.bank?.credit || 0);
+
+  const amountDr =
+    Number(item.cash?.debit || 0) +
+    Number(item.bank?.debit || 0);
+
+  const buyRate =
+    goldCr > 0 && amountDr > 0
+      ? amountDr / goldCr
+      : 0;
+
+  const sellRate =
+    goldDr > 0 && amountCr > 0
+      ? amountCr / goldDr
+      : 0;
+
+  let avgRate = 0;
+
+  if (buyRate && sellRate) {
+    avgRate = (buyRate + sellRate) / 2;
+  } else {
+    avgRate = buyRate || sellRate;
+  }
+
+  const result =
+    (avgRate * 116.64) / 1.4485;
+
+  return Number(result.toFixed(3));
+}
   return (
     <div className="container mt-3">
 
@@ -263,7 +298,7 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th colSpan="2">Gold</th>
                 <th colSpan="2">Silver</th>
                 <th colSpan="2">Amount</th>
-                {/* <th colSpan="2">Bank</th> */}
+                <th rowSpan="2">Dollar Price</th>
                 <th rowSpan="2" style={{width:'10%'}}>Action</th>
               </tr>
 
@@ -277,6 +312,9 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th>
 
+                {/* <th className="text-success">Buy</th>
+                <th className="text-danger">Sell</th> */}
+
                 {/* <th className="text-success">Cr</th>
                 <th className="text-danger">Dr</th> */}
               </tr>
@@ -289,7 +327,6 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                 const isTotal = item.isTotal;
                 
                 const rows = [];
-                if(!isTotal){
 // 🔹 MAIN ROW (ENTRY OR TOTAL)
                 rows.push(
                   <tr
@@ -337,8 +374,11 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_nbo?.debit || 0}</td>
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.credit || 0}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank_sohar?.debit || 0}</td> */}
-                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.credit+item.cash.credit}</td>
-                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{item.bank?.debit +item.cash.debit}</td>
+                    <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{(item.bank?.credit+item.cash.credit).toFixed(3)}</td>
+                    <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{(item.bank?.debit +item.cash.debit).toFixed(3)}</td>
+                    
+                    <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{calculateGoldDollarPrice(item)}</td>
+                    {/* <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td> */}
                      {/* <td>
                       {!isTotal && (
                       <span className={`badge ${item.isBooking ? "bg-info text-dark" : "bg-primary text-dark"}`}>
@@ -347,12 +387,25 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                       )}
                     </td> */}
                     {/* ACTION */}
-                    <td>
+                    <td
+                      style={
+                        false
+                          ? {
+                              backgroundColor: "green",
+                              color: "white",
+                              fontWeight: "bold",
+                              textAlign: "center"
+                            }
+                          : {}
+                      }
+                    >
                       {!isTotal && (
                         <>
                           <button
                             className="btn btn-sm btn-primary me-2"
-                            onClick={() => navigate(`/buyAndSellLedger/edit/${item.id}`)}
+                            onClick={() =>
+                              navigate(`/buyAndSellLedger/edit/${item.id}`)
+                            }
                           >
                             Edit
                           </button>
@@ -364,11 +417,18 @@ const bankEntries = Object.entries(balance || {}).filter(([k]) =>
                             Delete
                           </button>
                         </>
-                      )}
+                      // ) : (
+                      //   (
+                      //     ((item.bank?.credit || 0) +
+                      //       (item.cash?.credit || 0)) -
+                      //     ((item.bank?.debit || 0) +
+                      //       (item.cash?.debit || 0))
+                      //   ).toFixed(3)
+                      // )
+              )}
                     </td>
                   </tr>
                 );
-                }
                 
 
                 // 🔥 CLOSING ROW (RIGHT AFTER TOTAL)

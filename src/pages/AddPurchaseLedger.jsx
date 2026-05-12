@@ -41,19 +41,8 @@ export default function AddPurchaseLedger() {
   });
   useEffect(() => {
   async function fetchBanks() {
-    const res = await getBanks(); // your API
+    const res = await getBanks();
     setBanks(res.data.data);
-
-    // initialize form structure
-    const initialBankState = {};
-    res.data.data.forEach(b => {
-      initialBankState[b.code] = { credit: "", debit: "" };
-    });
-
-    setForm(prev => ({
-      ...prev,
-      bank: initialBankState
-    }));
   }
 
   fetchBanks();
