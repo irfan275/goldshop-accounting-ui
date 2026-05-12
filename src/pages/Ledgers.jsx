@@ -10,6 +10,7 @@ import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { addPurchaseLedger } from "../services/purchaseLedgerService";
+import { addBuyAndSellLedger } from "../services/buyAndSellLedgerService";
 
 function Ledgers() {
   const navigate = useNavigate();
@@ -91,6 +92,20 @@ function Ledgers() {
       } catch (err) {
         console.error(err);
         alert("Purchase Ledger Creation failed");
+      }finally{
+        setLoading(false);
+      }
+    }
+  };
+  const createAddAndSellLedger = async (id) => {
+    if (window.confirm("Are you sure to create this Add & Sell ledger entry?")) {
+      try {
+        setLoading(true);
+        await addBuyAndSellLedger(id);
+        alert("Add & Sell Ledger Created successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Add & Sell Ledger Creation failed");
       }finally{
         setLoading(false);
       }
@@ -1023,6 +1038,12 @@ const formatAmount = (value, decimals = 3) => {
                               onClick={() => createPurchaseLedger(item.id)}
                             >
                               Add
+                            </button>
+                            <button
+                              className="btn btn-sm btn-primary me-2"
+                              onClick={() => createAddAndSellLedger(item.id)}
+                            >
+                              Buy&Sell
                             </button>
   
                             {/* <button
