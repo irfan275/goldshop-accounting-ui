@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteLedger, getLedger } from "../services/buyAndSellLedgerService";
+import { deleteLedger, getLedger } from "../services/silverBuyAndSellLedgerService";
 import Pagination from "./Pagination";
 import { getCustomers } from "../services/customerService";
 import { format, subDays } from "date-fns";
@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
-function BuyAndSellLedgers() {
+function SilverBuyAndSellLedgers() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
@@ -32,8 +32,8 @@ function BuyAndSellLedgers() {
   const [balance, setBalance] = useState(null);
   const [ledgers, setLedgers] = useState([]);
   const [showBanks, setShowBanks] = useState(false);
-const MULTIPLIER = 116.64;
-const DIVISOR = 1.4485;
+const MULTIPLIER = 1000;
+const DIVISOR = 13.58;
   // ---------------- LOAD LEDGERS ----------------
   useEffect(() => {
     loadLedgers(1);
@@ -129,11 +129,15 @@ const getFileTimestamp = () => {
 const bankEntries = Object.entries(balance || {}).filter(([k]) =>
   k.startsWith("bank_")
 );
-function calculateGoldDollarPrice(item) {
-  const goldCr =     Number(item.gold?.credit || 0) +
-    (Number(item.ttb?.credit || 0) * MULTIPLIER);
-  const goldDr = Number(item.gold?.debit || 0) +
-    (Number(item.ttb?.debit || 0) * MULTIPLIER);
+function calculateSilverDollarPrice(item) {
+
+  const silverCr =
+    Number(item.silver?.credit || 0) +
+    (Number(item.silver_bar?.credit || 0) * MULTIPLIER);
+
+  const silverDr =
+    Number(item.silver?.debit || 0) +
+    (Number(item.silver_bar?.debit || 0) * MULTIPLIER);
 
   const amountCr =
     Number(item.cash?.credit || 0) +
@@ -144,40 +148,40 @@ function calculateGoldDollarPrice(item) {
     Number(item.bank?.debit || 0);
 
   const buyRate =
-    goldCr > 0 && amountDr > 0
-      ? amountDr / goldCr
+    silverCr > 0
+      ? amountDr / silverCr
       : 0;
 
   const sellRate =
-    goldDr > 0 && amountCr > 0
-      ? amountCr / goldDr
+    silverDr > 0
+      ? amountCr / silverDr
       : 0;
 
-  let avgRate = 0;
+  let avgRate =
+    buyRate && sellRate
+      ? (buyRate + sellRate) / 2
+      : buyRate || sellRate;
 
-  if (buyRate && sellRate) {
-    avgRate = (buyRate + sellRate) / 2;
-  } else {
-    avgRate = buyRate || sellRate;
-  }
+  // convert gram -> KG
+  const kgRate = avgRate * MULTIPLIER;
 
-  const result =
-    (avgRate * MULTIPLIER) / DIVISOR;
+  const result = kgRate / DIVISOR;
 
   return Number(result.toFixed(3));
 }
-function getGoldBalance(item) {
+
+
+function getSilverBalance(item) {
   const buy =
-    Number(item.gold?.credit || 0) +
-    (Number(item.ttb?.credit || 0) * MULTIPLIER);
+    Number(item.silver?.credit || 0) +
+    (Number(item.silver_bar?.credit || 0) * MULTIPLIER);
 
   const sell =
-    Number(item.gold?.debit || 0) +
-    (Number(item.ttb?.debit || 0) * MULTIPLIER);
+    Number(item.silver?.debit || 0) +
+    (Number(item.silver_bar?.debit || 0) * MULTIPLIER);
 
   return buy - sell;
 }
-
 
 function getAmountBalance(item) {
   const credit =
@@ -192,17 +196,17 @@ function getAmountBalance(item) {
 }
 function calculateBuyDollarPrice(item) {
   const amountCr =
-    Number(item.cash?.credit || 0) +
-    Number(item.bank?.credit || 0);
+    Number(item.cash?.debit || 0) +
+    Number(item.bank?.debit || 0);
 
-  const goldBuy =
-    Number(item.gold?.credit || 0) +
-    (Number(item.ttb?.credit || 0) * MULTIPLIER);
+  const silverBuy =
+        Number(item.silver?.credit || 0) +
+    (Number(item.silver_bar?.credit || 0) * MULTIPLIER);
 
-  if (!amountCr || !goldBuy) return 0;
+  if (!amountCr || !silverBuy) return 0;
 
   const result =
-    (amountCr / goldBuy) *
+    (amountCr / silverBuy) *
     MULTIPLIER /
     DIVISOR;
 
@@ -210,24 +214,24 @@ function calculateBuyDollarPrice(item) {
 }
 function calculateSellDollarPrice(item) {
   const amountDr =
-    Number(item.cash?.debit || 0) +
-    Number(item.bank?.debit || 0);
+    Number(item.cash?.credit || 0) +
+    Number(item.bank?.credit || 0);
 
-  const goldSell =
-    Number(item.gold?.debit || 0) +
-    (Number(item.ttb?.debit || 0) * MULTIPLIER);
+  const silverSell =
+    Number(item.silver?.debit || 0) +
+    (Number(item.silver_bar?.debit || 0) * MULTIPLIER);
 
-  if (!amountDr || !goldSell) return 0;
+  if (!amountDr || !silverSell) return 0;
 
   const result =
-    (amountDr / goldSell) *
+    (amountDr / silverSell) *
     MULTIPLIER /
     DIVISOR;
 
   return Number(result.toFixed(3));
 }
 function calculateDollarPrice(item) {
-  const goldBalance = getGoldBalance(item);
+  const goldBalance = getSilverBalance(item);
   const amountBalance = getAmountBalance(item);
 
   if (!goldBalance || !amountBalance) {
@@ -248,14 +252,14 @@ function calculateDollarPrice(item) {
       <div className="d-flex justify-content-between align-items-center mb-3">
 
   {/* LEFT */}
-  <h3 className="mb-0">Buy & Sell  Ledgers</h3>
+  <h3 className="mb-0">Silver Buy & Sell  Ledgers</h3>
 
   {/* RIGHT */}
   <div className="d-flex gap-2">
     
     <button
       className="btn btn-primary"
-      onClick={() => navigate("/gold/buyAndSellLedger/add")}
+      onClick={() => navigate("/silver/buyAndSellLedger/add")}
     >
       Add Entry
     </button>
@@ -373,7 +377,7 @@ function calculateDollarPrice(item) {
                 <th rowSpan="2">Customer</th>
                 <th rowSpan="2" style={{width:'30%'}}>Description</th>
 
-                <th colSpan="2">Gold</th>
+                <th colSpan="2">Silver</th>
                 {/* <th colSpan="2">Silver</th> */}
                 <th colSpan="2">Amount</th>
                 <th rowSpan="2">Dollar Price</th>
@@ -426,8 +430,8 @@ function calculateDollarPrice(item) {
                     
 
                     {/* GOLD */}
-                    <td className="bg-warning-subtle text-success">{(item.gold.credit+(item.ttb.credit*116.64)).toFixed(3)}</td>
-                    <td className="bg-warning-subtle text-danger">{(item.gold.debit+(item.ttb.debit*116.64)).toFixed(3)}</td>
+                    <td className="bg-warning-subtle text-success">{(item.silver.credit+(item.silver_bar.credit*1000)).toFixed(3)}</td>
+                    <td className="bg-warning-subtle text-danger">{(item.silver.debit+(item.silver_bar.debit*1000)).toFixed(3)}</td>
 
                     {/* TTB */}
                     {/* <td className="bg-warning-subtle text-success">{item.ttb.credit || 0}</td>
@@ -455,7 +459,7 @@ function calculateDollarPrice(item) {
                     <td className="text-success" style={{ backgroundColor: "#73A3E7" }}>{(item.bank?.credit+item.cash.credit).toFixed(3)}</td>
                     <td className="text-danger" style={{ backgroundColor: "#73A3E7" }}>{(item.bank?.debit +item.cash.debit).toFixed(3)}</td>
                     
-                    <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{calculateGoldDollarPrice(item)}</td>
+                    <td className="text-success" style={{ backgroundColor: "#EACAB3" }}>{calculateSilverDollarPrice(item)}</td>
                     {/* <td className="text-danger" style={{ backgroundColor: "#EACAB3" }}>{item.cash.debit || 0}</td> */}
                      {/* <td>
                       {!isTotal && (
@@ -482,7 +486,7 @@ function calculateDollarPrice(item) {
                           <button
                             className="btn btn-sm btn-primary me-2"
                             onClick={() =>
-                              navigate(`/gold/buyAndSellLedger/edit/${item.id}`)
+                              navigate(`/silver/buyAndSellLedger/edit/${item.id}`)
                             }
                           >
                             Edit
@@ -520,7 +524,7 @@ function calculateDollarPrice(item) {
 
                       
                       <td colSpan="2">
-                          {getGoldBalance(item).toFixed(3)}
+                          {getSilverBalance(item).toFixed(3)}
                         </td>
 
                         {/* <td colSpan="2">
@@ -566,4 +570,4 @@ function calculateDollarPrice(item) {
   );
 }
 
-export default BuyAndSellLedgers;
+export default SilverBuyAndSellLedgers;

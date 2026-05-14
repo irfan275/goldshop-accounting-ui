@@ -11,6 +11,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { addPurchaseLedger } from "../services/purchaseLedgerService";
 import { addBuyAndSellLedger } from "../services/buyAndSellLedgerService";
+import { addSilverBuyAndSellLedger } from "../services/silverBuyAndSellLedgerService";
 
 function Ledgers() {
   const navigate = useNavigate();
@@ -97,15 +98,29 @@ function Ledgers() {
       }
     }
   };
-  const createAddAndSellLedger = async (id) => {
-    if (window.confirm("Are you sure to create this Add & Sell ledger entry?")) {
+  const createGoldBuyAndSellLedger = async (id) => {
+    if (window.confirm("Are you sure to create this Gold Buy & Sell ledger entry?")) {
       try {
         setLoading(true);
         await addBuyAndSellLedger(id);
-        alert("Add & Sell Ledger Created successfully!");
+        alert("Add Gold Buy & Sell Ledger Created successfully!");
       } catch (err) {
         console.error(err);
-        alert("Add & Sell Ledger Creation failed");
+        alert("Add Gold Buy & Sell Ledger Creation failed");
+      }finally{
+        setLoading(false);
+      }
+    }
+  };
+  const createSilverBuyAndSellLedger = async (id) => {
+    if (window.confirm("Are you sure to create this Silver Buy & Sell ledger entry?")) {
+      try {
+        setLoading(true);
+        await addSilverBuyAndSellLedger(id);
+        alert("Silver Buy & Sell Ledger Created successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Silver Buy & Sell Ledger Creation failed");
       }finally{
         setLoading(false);
       }
@@ -644,6 +659,22 @@ const handleExport = async () => {
   const buffer = await workbook.xlsx.writeBuffer();
   saveAs(new Blob([buffer]), `Ledger_${getFileTimestamp()}.xlsx`);
 };
+const hasSilverValue = (item) => {
+  return (
+    Number(item?.silver?.credit || 0) > 0 ||
+    Number(item?.silver?.debit || 0) > 0 ||
+    Number(item?.silver_bar?.credit || 0) > 0 ||
+    Number(item?.silver_bar?.debit || 0) > 0
+  );
+};
+const hasGoldValue = (item) => {
+  return (
+    Number(item?.gold?.credit || 0) > 0 ||
+    Number(item?.gold?.debit || 0) > 0 ||
+    Number(item?.ttb?.credit || 0) > 0 ||
+    Number(item?.ttb?.debit || 0) > 0
+  );
+};
 const bankEntries = Object.entries(balance || {}).filter(([k]) =>
   k.startsWith("bank_")
 );
@@ -672,12 +703,12 @@ const formatAmount = (value, decimals = 3) => {
     >
       Add Entry
     </button>
-    <button
+    {/* <button
       className="btn btn-success"
       onClick={handleExport}
     >
       Export Excel
-    </button>
+    </button> */}
 
   </div>
 
@@ -1039,12 +1070,18 @@ const formatAmount = (value, decimals = 3) => {
                             >
                               Add
                             </button>
-                            <button
+                            {hasGoldValue(item) && (<button
                               className="btn btn-sm btn-primary me-2"
-                              onClick={() => createAddAndSellLedger(item.id)}
+                              onClick={() => createGoldBuyAndSellLedger(item.id)}
                             >
-                              Buy&Sell
-                            </button>
+                              Gold B/S
+                            </button>)}
+                            {hasSilverValue(item) && (<button
+                              className="btn btn-sm btn-primary me-2"
+                              onClick={() => createSilverBuyAndSellLedger(item.id)}
+                            >
+                              Silver B/S
+                            </button>)}
   
                             {/* <button
                               className="btn btn-sm btn-danger"

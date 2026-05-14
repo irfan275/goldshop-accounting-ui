@@ -1,6 +1,6 @@
 import api from "./api";
 
-const API_URL = "/gold/buyAndSellLedger";
+const API_URL = "/silver/buyAndSellLedger";
 
 // GET all customers
 // export const getInvoices = (page, size, invoiceNumber,customerId) => {
@@ -37,6 +37,6 @@ export const getInvoiceNumber = (shopId) => {
   return api.get(`${API_URL}/sequence/${shopId}`);
 };
 
-export const addBuyAndSellLedger = (id) => {
+export const addSilverBuyAndSellLedger = (id) => {
   return api.post(`${API_URL}/createBuyAndSellLedger`, {ledgerId : id});
 };

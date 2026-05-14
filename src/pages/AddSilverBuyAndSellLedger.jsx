@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../services/buyAndSellLedgerService";
+import { createLedger, getInvoiceNumber, getLedgerById, updateLedger } from "../services/silverBuyAndSellLedgerService";
 import { getCustomers } from "../services/customerService";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getBanks, getShops } from "../services/userService";
 
-export default function AddBuyAndSellLedger() {
+export default function AddSilverBuyAndSellLedger() {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
@@ -287,7 +287,7 @@ const handleBankChange = (bankCode, field, value) => {
         alert("Ledger created");
 
       }
-      navigate("/gold/buyAndSellLedger");
+      navigate("/silver/buyAndSellLedger");
     }catch (error) {
         console.error(error);
         alert("Something went wrong");
@@ -304,7 +304,7 @@ const handleBankChange = (bankCode, field, value) => {
   {/* ===== CARD ===== */}
   <div className="card shadow">
     <div className="card-header bg-primary text-white">
-      <h3>{isEditMode ? "Edit Buy & Sell Ledger" : "Create Buy & Sell Ledger"}</h3>
+      <h3>{isEditMode ? "Edit Silver Buy & Sell Ledger" : "Create Silver Buy & Sell Ledger"}</h3>
       {invoiceNumber && (
         <div className="row mb-3">
           <div className="col-md-6">

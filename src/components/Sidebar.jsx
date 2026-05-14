@@ -59,13 +59,24 @@ function Sidebar() {
         </li>
         <li>
           <NavLink
-            to="/buyAndSellLedger"
+            to="/gold/buyAndSellLedger"
             className={({ isActive }) =>
               "menu-link" + (isActive ? " active" : "")
             }
           >
             <FaFileInvoice className="menu-icon" />
-            Buy & Sell Ledger
+            Gold Buy & Sell Ledger
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/silver/buyAndSellLedger"
+            className={({ isActive }) =>
+              "menu-link" + (isActive ? " active" : "")
+            }
+          >
+            <FaFileInvoice className="menu-icon" />
+            Silver Buy & Sell Ledger
           </NavLink>
         </li>
          <li>
