@@ -16,6 +16,7 @@ import { addSilverBuyAndSellLedger } from "../services/silverBuyAndSellLedgerSer
 function Ledgers() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState("all");
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -57,7 +58,8 @@ function Ledgers() {
         invoiceNo,
         customer,
         fromDate.toLocaleDateString("en-CA"),
-        toDate.toLocaleDateString("en-CA")
+        toDate.toLocaleDateString("en-CA"),
+        bookingFilter
       );
 
       setLedgers(response.data.data || []);
@@ -869,7 +871,7 @@ const formatAmount = (value, decimals = 3) => {
         </div>
 
         {/* SEARCH */}
-        <div className="col-md-3">
+        <div className="col-md-2">
           <input
             className="form-control"
             placeholder="Ledger No / Ref"
@@ -877,7 +879,17 @@ const formatAmount = (value, decimals = 3) => {
             onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
-
+        <div className="col-md-1">
+        <select
+          className="form-select"
+          value={bookingFilter}
+          onChange={(e) => setBookingFilter(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="booking">Booking</option>
+          <option value="non-booking">Non Booking</option>
+        </select>
+      </div>
         {/* FROM DATE */}
         <div className="col-md-2">
            <DatePicker
